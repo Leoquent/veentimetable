@@ -816,19 +816,23 @@
     }
 
     // Helpers to translate day/time to hours and back
+    // Wandelt (Festival-Tag, "HH:MM") in Festival-Stunden seit Freitag 18:00 um.
+    // Muss exakt die Umkehrung von hoursToTime sein. Konvention (Nacht-Rollover
+    // um 02:00 – ein „Festival-Tag" reicht bis 02:00 der Folgenacht):
+    //   Freitag = Fr 18:00 .. Sa 02:00   (00:00/01:00 = früher Samstagmorgen)
+    //   Samstag = Sa 02:00 .. So 02:00   (00:00/01:00 = früher Sonntagmorgen)
+    //   Sonntag = So 02:00 .. So 14:00
     function timeToHours(day, timeStr) {
       const [h, m] = timeStr.split(":").map(Number);
-      let base = 0;
+      let abs; // Stunden seit Freitag 00:00
       if (day === "Freitag") {
-        if (h < 12) base = 24; // Saturday morning (e.g. 01:00)
-        else base = 0;
+        abs = (h >= 2) ? h : 24 + h;        // 00:00/01:00 -> Samstag früh
       } else if (day === "Samstag") {
-        if (h < 12) base = 48; // Sunday morning
-        else base = 24;
-      } else if (day === "Sonntag") {
-        base = 48;
+        abs = (h >= 2) ? 24 + h : 48 + h;   // 00:00/01:00 -> Sonntag früh
+      } else { // Sonntag
+        abs = 48 + h;
       }
-      return base + h + m/60 - 18.0; // Friday 18:00 is hour 0
+      return abs + m / 60 - 18.0; // Freitag 18:00 = Stunde 0
     }
 
     function hoursToTime(hours) {
@@ -1283,13 +1287,13 @@
 
       const timelineSaturday = React.useMemo(() => {
         return allMergedSlots
-          .filter(s => s.startHours >= 8.0 && s.startHours < 30.0)
+          .filter(s => s.startHours >= 8.0 && s.startHours < 32.0)
           .sort((a, b) => a.startHours - b.startHours);
       }, [allMergedSlots]);
 
       const timelineSunday = React.useMemo(() => {
         return allMergedSlots
-          .filter(s => s.startHours >= 30.0 && s.startHours < 44.0)
+          .filter(s => s.startHours >= 32.0 && s.startHours < 44.0)
           .sort((a, b) => a.startHours - b.startHours);
       }, [allMergedSlots]);
 
@@ -1521,12 +1525,16 @@
                       },
                         HOURS_24.map(time => {
                           const h = timeToHours(slot1Day, time);
-                          const isOccupied = allMergedSlots.some(s => {
+                          const end = h + Number(slot1Duration);
+                          // Innerhalb der Festivalzeit (Fr 18:00–So 14:00) UND passt der Tag zur Auswahl?
+                          const available = h >= 0 && end <= 44 && hoursToTime(h).day === slot1Day;
+                          const isOccupied = available && allMergedSlots.some(s => {
                             if (s.djName && s.djName.toUpperCase() === djName.trim().toUpperCase()) return false;
-                            return h < s.endHours && (h + Number(slot1Duration)) > s.startHours;
+                            return h < s.endHours && end > s.startHours;
                           });
-                          return React.createElement("option", { key: time, value: time, disabled: isOccupied, style: isOccupied ? { color: '#666' } : {} }, 
-                            isOccupied ? `${time} (belegt)` : time
+                          const disabled = !available || isOccupied;
+                          return React.createElement("option", { key: time, value: time, disabled: disabled, style: disabled ? { color: '#666' } : {} },
+                            !available ? `${time} (—)` : (isOccupied ? `${time} (belegt)` : time)
                           );
                         })
                       )
@@ -1581,12 +1589,16 @@
                       },
                         HOURS_24.map(time => {
                           const h = timeToHours(slot2Day, time);
-                          const isOccupied = allMergedSlots.some(s => {
+                          const end = h + Number(slot2Duration);
+                          // Innerhalb der Festivalzeit (Fr 18:00–So 14:00) UND passt der Tag zur Auswahl?
+                          const available = h >= 0 && end <= 44 && hoursToTime(h).day === slot2Day;
+                          const isOccupied = available && allMergedSlots.some(s => {
                             if (s.djName && s.djName.toUpperCase() === djName.trim().toUpperCase()) return false;
-                            return h < s.endHours && (h + Number(slot2Duration)) > s.startHours;
+                            return h < s.endHours && end > s.startHours;
                           });
-                          return React.createElement("option", { key: time, value: time, disabled: isOccupied, style: isOccupied ? { color: '#666' } : {} }, 
-                            isOccupied ? `${time} (belegt)` : time
+                          const disabled = !available || isOccupied;
+                          return React.createElement("option", { key: time, value: time, disabled: disabled, style: disabled ? { color: '#666' } : {} },
+                            !available ? `${time} (—)` : (isOccupied ? `${time} (belegt)` : time)
                           );
                         })
                       )
