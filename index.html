@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Veenland Timetable 2026</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- React & Supabase CDNs -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* CSS Variables - Locked to Sunset Farbwelt */
+    :root {
+      --accent: #e0552f;
+      --bg: #2a2622;
+      --muted: #b9a899;
+      --white: #ffffff;
+      --font-anton: 'Anton', sans-serif;
+      --font-archivo: 'Archivo', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #131110;
+      color: var(--white);
+      font-family: var(--font-archivo);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    /* Outer Wrapper Container */
+    .timetable-wrapper {
+      width: 100%;
+      max-width: 880px;
+      margin: 0 auto;
+      background: var(--bg);
+      border: 9px solid var(--accent);
+      padding: 44px 48px 40px;
+      position: relative;
+    }
+
+    /* Top Bar Utility Buttons – bündig (gleiche Breite + zentriert) wie das Timetable darunter */
+    .top-bar-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin: 0 auto 20px; /* auto = exakt über dem Timetable ausgerichtet */
+      width: 100%;
+      max-width: 880px;
+    }
+
+    /* Rechte Gruppe: Modus-Umschalter + Drucken gehören zusammen
+       (die Seiten-Aufteilung beeinflusst das Druckergebnis) – als sichtbare
+       Einheit gerahmt und rechtsbündig mit der Außenkante des Timetables. */
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 6px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Verbindungspfeil: macht klar, dass „Seiten" in „Drucken" einfließt */
+    .top-bar-right .group-arrow {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+      opacity: 0.6;
+      user-select: none;
+    }
+
+    /* Buttons innerhalb der Gruppe wirken zusammengehörig (kein eigener Rahmen) */
+    .top-bar-right .btn {
+      border-color: transparent;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .top-bar-right .btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: var(--accent);
+      color: var(--white);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+      color: var(--muted) !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--white);
+      border-color: var(--accent);
+      font-weight: bold;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn-status {
+      background: transparent;
+      border: none;
+      cursor: default;
+      font-size: 10px;
+    }
+    .btn-status:hover {
+      background: transparent;
+      color: var(--muted);
+      border-color: transparent;
+      transform: none;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .status-dot.green { background: #4caf50; }
+    .status-dot.orange { background: #ff9800; }
+
+    /* Timetable Top Header */
+    .timetable-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.22em;
+      color: var(--accent);
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 30px;
+    }
+
+    /* Hero section styling */
+    .hero-section {
+      display: grid;
+      grid-template-columns: 1fr auto 310px;
+      gap: 28px;
+      align-items: end;
+      padding-bottom: 35px;
+    }
+
+    .hero-fairy {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      align-self: end;
+      position: relative; /* Anker für die Funken-Ebene */
+    }
+
+    .hero-fairy img {
+      height: 180px;
+      width: auto;
+      opacity: 0.85;
+      filter: drop-shadow(0 2px 8px rgba(224, 85, 47, 0.25));
+      transition: opacity 0.3s ease;
+      display: block;
+      position: relative;
+      top: 5px; /* fest nach unten gesetzt, bündig mit "LAND" – kein Schweben */
+      animation: fairyGlow 4s ease-in-out infinite;
+      z-index: 1;
+    }
+
+    .hero-fairy img:hover {
+      opacity: 1;
+    }
+
+    /* Pulsierendes magisches Leuchten (kein Bewegen der Fee selbst) */
+    @keyframes fairyGlow {
+      0%, 100% {
+        filter: drop-shadow(0 2px 8px rgba(224, 85, 47, 0.25));
+      }
+      50% {
+        filter: drop-shadow(0 0 16px rgba(224, 85, 47, 0.6))
+                drop-shadow(0 0 30px rgba(255, 168, 92, 0.35));
+      }
+    }
+
+    /* Funken-Ebene rund um die Fee */
+    .fairy-sparkles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .sparkle {
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffffff 0%, var(--accent) 55%, rgba(224,85,47,0) 100%);
+      box-shadow: 0 0 6px 1px rgba(255, 190, 120, 0.8);
+      opacity: 0;
+      will-change: transform, opacity;
+    }
+
+    /* Vier funkelnde Punkte – an Ort und Stelle aufleuchtend */
+    .sparkle:nth-child(1) { top: 16%; left: 30%; animation: twinkle 3.2s ease-in-out infinite; animation-delay: 0s; }
+    .sparkle:nth-child(2) { top: 42%; left: 70%; width: 5px; height: 5px; animation: twinkle 2.6s ease-in-out infinite; animation-delay: 0.7s; }
+    .sparkle:nth-child(3) { top: 64%; left: 24%; width: 5px; height: 5px; animation: twinkle 3.8s ease-in-out infinite; animation-delay: 1.3s; }
+    .sparkle:nth-child(4) { top: 26%; left: 60%; animation: twinkle 3.0s ease-in-out infinite; animation-delay: 1.9s; }
+
+    /* Ein kleiner Funke, der in einem Bogen um die Fee fliegt */
+    .sparkle.spark-fly {
+      top: 70%;
+      left: 48%;
+      width: 6px;
+      height: 6px;
+      animation: sparkFly 6.5s ease-in-out infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0; transform: scale(0.4); }
+      50%      { opacity: 1; transform: scale(1.15); }
+    }
+
+    @keyframes sparkFly {
+      0%   { opacity: 0; transform: translate(0, 0) scale(0); }
+      12%  { opacity: 1; transform: translate(20px, -16px) scale(1); }
+      30%  { transform: translate(34px, -40px) scale(1.1); }
+      50%  { opacity: 1; transform: translate(2px, -66px) scale(0.9); }
+      70%  { transform: translate(-32px, -42px) scale(1.1); }
+      88%  { opacity: 1; transform: translate(-20px, -16px) scale(1); }
+      100% { opacity: 0; transform: translate(0, 0) scale(0); }
+    }
+
+    /* Animationen bei reduzierter Bewegung deaktivieren */
+    @media (prefers-reduced-motion: reduce) {
+      .hero-fairy img { animation: none; top: 5px; }
+      .fairy-sparkles { display: none; }
+    }
+
+    .hero-title {
+      font-family: var(--font-anton);
+      font-weight: 400;
+      font-size: 158px;
+      line-height: 0.82;
+      letter-spacing: -0.01em;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .hero-meta {
+      padding-left: 22px;
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 10px;
+    }
+
+    .meta-dates {
+      font-family: var(--font-archivo);
+      font-weight: 900;
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: var(--accent);
+    }
+
+    .meta-subtitle {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-top: 14px;
+      line-height: 1.7;
+    }
+
+    .meta-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+      margin: 16px 0;
+    }
+
+    .meta-info {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .meta-location {
+      font-family: var(--font-archivo);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      color: var(--accent);
+      margin-top: 8px;
+      text-decoration: none;
+      display: inline-block;
+      transition: opacity 0.2s ease;
+    }
+    .meta-location:hover {
+      opacity: 0.8;
+      text-decoration: underline;
+    }
+
+    /* Timetable Grid & Slots */
+    .legend-row {
+      display: flex;
+      gap: 18px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .day-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 10px;
+      margin-top: 40px;
+      margin-bottom: 10px;
+    }
+
+    .day-name {
+      font-family: var(--font-archivo);
+      font-weight: 900;
+      font-size: 32px;
+      color: var(--accent);
+    }
+
+    .day-date {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .slot-row {
+      display: grid;
+      grid-template-columns: 168px 1fr;
+      gap: 24px;
+      align-items: center;
+      padding: 16px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      transition: background-color 0.2s ease;
+    }
+
+    .slot-row.interactive:hover {
+      background-color: rgba(255, 255, 255, 0.02);
+      cursor: pointer;
+    }
+
+    .slot-row.locked {
+      cursor: not-allowed;
+    }
+
+    .slot-time-large {
+      font-family: var(--font-archivo);
+      font-weight: 800;
+      font-size: 80px;
+      line-height: 0.78;
+      letter-spacing: -0.05em;
+      color: var(--accent);
+    }
+
+    .slot-content {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .slot-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+    }
+
+    .slot-title {
+      font-family: var(--font-archivo);
+      font-weight: 800;
+      font-size: 34px;
+      line-height: 1;
+      letter-spacing: -0.01em;
+      color: var(--accent); 
+      text-transform: uppercase; /* Einheitlich in Versalien */
+    }
+
+    .slot-time-range {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .slot-genre {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      letter-spacing: 0.03em;
+      color: var(--muted);
+    }
+
+    /* Footer styling */
+    .timetable-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 50px;
+      gap: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 25px;
+    }
+
+    .footer-quote {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      line-height: 1.8;
+      font-style: italic;
+    }
+
+    .footer-logo {
+      text-align: right;
+    }
+
+    .footer-logo-text {
+      font-family: var(--font-anton);
+      font-size: 40px;
+      line-height: 0.9;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .footer-stamp {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* Modal Overlay System */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: #1b1917;
+      border: 3px solid var(--accent);
+      width: 100%;
+      max-width: 580px;
+      padding: 35px 30px;
+      border-radius: 8px;
+      position: relative;
+      animation: slideUp 0.2s ease;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-title {
+      font-family: var(--font-archivo);
+      font-weight: 900;
+      font-size: 28px;
+      color: var(--accent);
+      margin-bottom: 20px;
+      letter-spacing: -0.01em;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--white);
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: var(--font-archivo);
+      border-radius: 4px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .form-hint {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.03em;
+      color: var(--muted);
+      opacity: 0.85;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    /* Checkbox & nested slot selector cards */
+    .slot-option-container {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      margin-bottom: 12px;
+    }
+
+    .checkbox-row input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .checkbox-label {
+      font-family: var(--font-archivo);
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--white);
+    }
+
+    .slot-fields-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-top: 10px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .form-select {
+      width: 100%;
+      background: #201e1c;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--white);
+      padding: 10px 14px;
+      font-size: 14px;
+      border-radius: 4px;
+      outline: none;
+      font-family: var(--font-archivo);
+    }
+    .form-select:focus {
+      border-color: var(--accent);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .btn-delete {
+      margin-right: auto;
+      background: rgba(244, 67, 54, 0.1);
+      color: #f44336;
+      border-color: rgba(244, 67, 54, 0.2);
+    }
+    .btn-delete:hover {
+      background: #f44336;
+      color: var(--white);
+      border-color: #f44336;
+    }
+
+    .warning-text {
+      font-size: 12px;
+      color: #ff9800;
+      margin-top: 6px;
+      font-family: var(--font-mono);
+    }
+
+    /* SQL code copy box styling */
+    .sql-code-box {
+      background: #111;
+      padding: 12px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #9ccc65;
+      overflow-x: auto;
+      white-space: pre;
+      margin: 12px 0;
+      border: 1px solid rgba(255,255,255,0.05);
+      max-height: 150px;
+    }
+
+    /* Responsive adjustments (nur am Bildschirm – NICHT im Druck,
+       sonst fällt der Header beim Drucken in die Mobil-Ansicht zusammen) */
+    @media screen and (max-width: 768px) {
+      .timetable-wrapper {
+        padding: 24px 20px 20px;
+      }
+      .hero-section {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .hero-title {
+        font-size: 100px;
+      }
+      .slot-row {
+        grid-template-columns: 100px 1fr;
+        gap: 16px;
+      }
+      .slot-time-large {
+        font-size: 50px;
+      }
+      .slot-title {
+        font-size: 22px;
+      }
+      .slot-fields-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ====================================================================
+       DRUCK / PDF-EXPORT — dunkles Website-Design auf A4
+       Das dunkle Layout ist Master und wird nur verkleinert, damit es passt.
+       WICHTIG: im Druckdialog "Hintergrundgrafiken" aktivieren, damit der
+       dunkle Hintergrund mitgedruckt wird.
+       Aufteilung über .print-continuous / .print-per-day.
+       ==================================================================== */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 10mm;
+      }
+
+      body {
+        background: #2a2622 !important;
+        color: var(--white) !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .no-print { display: none !important; }
+      .fairy-sparkles { display: none !important; }
+
+      .timetable-wrapper {
+        border: none !important;
+        background: #2a2622 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      /* Header wie auf der Website (3 Spalten) – nur kleiner, damit er auf A4 passt */
+      .hero-section {
+        display: grid !important;
+        grid-template-columns: 1fr auto 210px !important;
+        gap: 16px !important;
+        align-items: end !important;
+        padding-bottom: 20px !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .hero-title { font-size: 90px !important; line-height: 0.82 !important; }
+      .meta-dates { font-size: 22px !important; }
+      .meta-subtitle, .meta-info { font-size: 11px !important; }
+
+      /* Fee statisch (keine Animation/Funken), kleiner */
+      .hero-fairy img {
+        height: 118px !important;
+        animation: none !important;
+        top: 0 !important;
+        opacity: 1 !important;
+        filter: none !important;
+      }
+
+      /* Slots etwas kompakter, aber im Website-Raster */
+      .slot-row {
+        grid-template-columns: 140px 1fr !important;
+        gap: 18px !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .slot-time-large { font-size: 58px !important; }
+      .slot-title { font-size: 24px !important; }
+      .day-name { font-size: 28px !important; }
+
+      .day-header {
+        page-break-inside: avoid; break-inside: avoid;
+        page-break-after: avoid; break-after: avoid;
+      }
+
+      /* MODUS „Pro Tag": jeder Tag startet auf einer neuen Seite */
+      .print-per-day .print-day-container {
+        page-break-before: always;
+        break-before: page;
+        padding-top: 4mm !important;
+      }
+      .print-per-day .print-day-container:first-of-type {
+        page-break-before: avoid;
+        break-before: avoid;
+        padding-top: 0 !important;
+      }
+
+      /* MODUS „Durchlaufend": kein erzwungener Umbruch — zum Aneinanderkleben */
+      .print-continuous .print-day-container {
+        page-break-before: auto;
+        break-before: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Main Timetable Container -->
+  <div id="root" style="width: 100%;"></div>
+
+  <script>
+    // Database credentials configuration
+    // Paste your Supabase credentials below to activate real-time database sync.
+    // If left empty, the application operates in offline "Demo Mode" (Local Storage).
+    const SUPABASE_URL = "https://skwlshjgktangyxonygg.supabase.co"; 
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrd2xzaGpna3Rhbmd5eG9ueWdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3NjU0NjIsImV4cCI6MjA5ODM0MTQ2Mn0.6-kyV6NiNDR--vqMmXeYGGbeFLyGcHU357HdZFVpmoc";
+
+    // Day Dates
+    const DATES = {
+      "Freitag": "24.07.2026",
+      "Samstag": "25.07.2026",
+      "Sonntag": "26.07.2026"
+    };
+
+    // Leoquent's locked slots configuration (hardcoded in float hours since Friday 18:00)
+    const LEOQUENT_SLOTS = [
+      { id: "leo_1", djName: "LEOQUENT", genre: "Ghetto Trance · Bounce · Techno", startHours: 8.0, endHours: 10.0, isLocked: true },
+      { id: "leo_2", djName: "LEOQUENT", genre: "Gangster House · Midtempo · Bass House", startHours: 28.0, endHours: 30.0, isLocked: true }
+    ];
+
+    // Selectable times dropdown sequentially 00:00 to 23:00
+    const HOURS_24 = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
+
+    // Format genre string: normalize separators (commas, semicolons) to middle dots (·)
+    function formatGenre(genreStr) {
+      if (!genreStr) return "";
+      // If already contains ·, return as is
+      if (genreStr.includes("·")) return genreStr;
+      // Split by comma, semicolon, or slash and rejoin with ·
+      return genreStr.split(/[,;/]+/).map(s => s.trim()).filter(s => s.length > 0).join(" · ");
+    }
+
+    // Helpers to translate day/time to hours and back
+    function timeToHours(day, timeStr) {
+      const [h, m] = timeStr.split(":").map(Number);
+      let base = 0;
+      if (day === "Freitag") {
+        if (h < 12) base = 24; // Saturday morning (e.g. 01:00)
+        else base = 0;
+      } else if (day === "Samstag") {
+        if (h < 12) base = 48; // Sunday morning
+        else base = 24;
+      } else if (day === "Sonntag") {
+        base = 48;
+      }
+      return base + h + m/60 - 18.0; // Friday 18:00 is hour 0
+    }
+
+    function hoursToTime(hours) {
+      const absoluteHours = hours + 18.0;
+      let day = "Freitag";
+      let h = 0;
+      let m = Math.round((absoluteHours % 1) * 60);
+      
+      if (absoluteHours < 26.0) {
+        day = "Freitag";
+        h = Math.floor(absoluteHours) % 24;
+      } else if (absoluteHours < 50.0) {
+        day = "Samstag";
+        h = Math.floor(absoluteHours - 24.0) % 24;
+      } else {
+        day = "Sonntag";
+        h = Math.floor(absoluteHours - 48.0);
+      }
+      
+      const pad = (n) => String(n).padStart(2, "0");
+      return {
+        day,
+        timeStr: `${pad(h)}:${pad(m)}`
+      };
+    }
+
+    const React = window.React;
+    const ReactDOM = window.ReactDOM;
+
+    // React Main Application component
+    function App() {
+      const [slotsData, setSlotsData] = React.useState({});
+      const [myRegisteredSlots, setMyRegisteredSlots] = React.useState(() => {
+        try {
+          return JSON.parse(localStorage.getItem("veenland_my_slots")) || [];
+        } catch {
+          return [];
+        }
+      });
+      
+      // Form Input State
+      const [djName, setDjName] = React.useState("");
+      const [genre, setGenre] = React.useState("");
+      const [password, setPassword] = React.useState("");
+      
+      // Slot 1
+      const [slot1Active, setSlot1Active] = React.useState(true);
+      const [slot1Day, setSlot1Day] = React.useState("Freitag");
+      const [slot1Start, setSlot1Start] = React.useState("18:00");
+      const [slot1Duration, setSlot1Duration] = React.useState(2.0);
+
+      // Slot 2
+      const [slot2Active, setSlot2Active] = React.useState(false);
+      const [slot2Day, setSlot2Day] = React.useState("Freitag");
+      const [slot2Start, setSlot2Start] = React.useState("18:00");
+      const [slot2Duration, setSlot2Duration] = React.useState(2.0);
+      
+      const [isModalOpen, setIsModalOpen] = React.useState(false);
+      const [isDbModalOpen, setIsDbModalOpen] = React.useState(false);
+      const [openedSlotContext, setOpenedSlotContext] = React.useState(null);
+      
+      // Delete Confirmation Step state (0: form, 1: confirm view)
+      const [deleteConfirmStep, setDeleteConfirmStep] = React.useState(0);
+      const [deleteConfirmPassword, setDeleteConfirmPassword] = React.useState("");
+      
+      const [dbUrl, setDbUrl] = React.useState(() => localStorage.getItem("veenland_db_url") || SUPABASE_URL);
+      const [dbKey, setDbKey] = React.useState(() => localStorage.getItem("veenland_db_key") || SUPABASE_ANON_KEY);
+      
+      const [status, setStatus] = React.useState("Lokal (Demo-Modus)");
+      const [statusColor, setStatusColor] = React.useState("orange");
+
+      // Druck-/PDF-Aufteilung: 'continuous' (durchlaufend, zum Kleben) | 'perday' (eine Seite pro Tag)
+      const [printMode, setPrintMode] = React.useState("continuous");
+
+      const isLiveDb = React.useMemo(() => !!(dbUrl && dbKey), [dbUrl, dbKey]);
+
+      // Initialize Supabase Client dynamically if configured
+      const supabaseClient = React.useMemo(() => {
+        if (isLiveDb) {
+          try {
+            return window.supabase.createClient(dbUrl, dbKey);
+          } catch (e) {
+            console.error("Failed to initialize Supabase client:", e);
+          }
+        }
+        return null;
+      }, [dbUrl, dbKey, isLiveDb]);
+
+      // Fetch slots data from DB or LocalStorage
+      const fetchSlots = React.useCallback(async () => {
+        if (supabaseClient) {
+          try {
+            const { data, error } = await supabaseClient
+              .from("slots")
+              .select("slot_id, dj_name, genre, day, start_time, duration, start_hours, end_hours, password");
+            
+            if (error) throw error;
+            
+            const mapping = {};
+            if (data) {
+              data.forEach(row => {
+                mapping[row.slot_id] = {
+                  slotId: row.slot_id,
+                  djName: row.dj_name,
+                  genre: row.genre,
+                  day: row.day,
+                  startTime: row.start_time,
+                  duration: Number(row.duration),
+                  startHours: Number(row.start_hours),
+                  endHours: Number(row.end_hours),
+                  password: row.password || ""
+                };
+              });
+            }
+            setSlotsData(mapping);
+            setStatus("Synchronisiert (Supabase)");
+            setStatusColor("green");
+          } catch (e) {
+            console.error("Error reading slots from Supabase:", e);
+            setStatus("Verbindungsfehler!");
+            setStatusColor("orange");
+          }
+        } else {
+          // Local storage fallback
+          const localData = {};
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith("veenland_slot_")) {
+              const slotId = key.replace("veenland_slot_", "");
+              try {
+                localData[slotId] = JSON.parse(localStorage.getItem(key));
+              } catch {}
+            }
+          }
+          setSlotsData(localData);
+          setStatus("Lokal (Demo-Modus)");
+          setStatusColor("orange");
+        }
+      }, [supabaseClient]);
+
+      // Initial Fetch & Poll every 10 seconds if using DB
+      React.useEffect(() => {
+        fetchSlots();
+        if (isLiveDb) {
+          const interval = setInterval(fetchSlots, 10000);
+          return () => clearInterval(interval);
+        }
+      }, [fetchSlots, isLiveDb]);
+
+      // Detect if user has typed a name that has existing slots, and populate form
+      const handleDjNameChange = (name) => {
+        setDjName(name);
+        if (!name.trim()) return;
+
+        // Exclude Leoquent from autocomplete/loading
+        if (name.trim().toUpperCase() === "LEOQUENT") return;
+
+        const mySlots = Object.values(slotsData).filter(s => s.djName.toUpperCase() === name.trim().toUpperCase());
+        if (mySlots.length > 0) {
+          setGenre(mySlots[0].genre);
+          
+          // Load Slot 1
+          const s1 = mySlots[0];
+          setSlot1Active(true);
+          setSlot1Day(s1.day);
+          setSlot1Start(s1.startTime);
+          setSlot1Duration(s1.duration);
+
+          // Load Slot 2 (if present)
+          if (mySlots.length > 1) {
+            const s2 = mySlots[1];
+            setSlot2Active(true);
+            setSlot2Day(s2.day);
+            setSlot2Start(s2.startTime);
+            setSlot2Duration(s2.duration);
+          } else {
+            setSlot2Active(false);
+          }
+        }
+      };
+
+      // Handler when clicking on an active slot
+      const handleSlotClick = (slot) => {
+        if (slot.isLocked) return; // Leoquent slots are locked
+
+        setOpenedSlotContext(slot);
+        setDeleteConfirmStep(0);
+        setDeleteConfirmPassword("");
+
+        setDjName(slot.djName);
+        setGenre(slot.genre);
+        setPassword(""); // Never pre-fill password for security
+        
+        // Load all slots for this specific DJ
+        const djSlots = Object.values(slotsData).filter(s => s.djName.toUpperCase() === slot.djName.toUpperCase());
+        
+        const s1 = djSlots[0];
+        setSlot1Active(true);
+        setSlot1Day(s1.day);
+        setSlot1Start(s1.startTime);
+        setSlot1Duration(s1.duration);
+
+        if (djSlots.length > 1) {
+          const s2 = djSlots[1];
+          setSlot2Active(true);
+          setSlot2Day(s2.day);
+          setSlot2Start(s2.startTime);
+          setSlot2Duration(s2.duration);
+        } else {
+          setSlot2Active(false);
+        }
+
+        setIsModalOpen(true);
+      };
+
+      // Validation logic for overlaps
+      const validateSlots = (name, pSlots) => {
+        if (pSlots.length === 0) {
+          alert("Bitte aktiviere mindestens einen Slot zum Registrieren!");
+          return false;
+        }
+
+        // Leoquent locked areas
+        const leos = [
+          { start: 8.0, end: 10.0, label: "Samstag 02:00 – 04:00 (Leoquent)" },
+          { start: 28.0, end: 30.0, label: "Samstag 22:00 – 00:00 (Leoquent)" }
+        ];
+
+        for (let i = 0; i < pSlots.length; i++) {
+          const s = pSlots[i];
+          
+          if (s.start < 0.0 || s.end > 44.0) {
+            alert(`Der Slot liegt außerhalb der Festivalzeit (Freitag 18:00 – Sonntag 14:00)!`);
+            return false;
+          }
+
+          // Check Leoquent overlap
+          for (const leo of leos) {
+            if (s.start < leo.end && s.end > leo.start) {
+              alert(`Der ausgewählte Slot überschneidet sich mit dem Slot von Leoquent (${leo.label})!`);
+              return false;
+            }
+          }
+
+          // Check other DJs overlap
+          for (const val of Object.values(slotsData)) {
+            // Exclude Leoquent slots and current DJ's own slots
+            if (val.djName.toUpperCase() !== "LEOQUENT" && val.djName.toUpperCase() !== name.toUpperCase()) {
+              if (s.start < val.endHours && s.end > val.startHours) {
+                const startDetails = hoursToTime(val.startHours);
+                const endDetails = hoursToTime(val.endHours);
+                alert(`Der Slot überschneidet sich mit dem Slot von ${val.djName} (${startDetails.day} ${startDetails.timeStr} – ${endDetails.timeStr})!`);
+                return false;
+              }
+            }
+          }
+        }
+
+        // Check if Slot 1 and Slot 2 overlap with each other
+        if (pSlots.length === 2) {
+          const s1 = pSlots[0];
+          const s2 = pSlots[1];
+          if (s1.start < s2.end && s1.end > s2.start) {
+            alert("Deine beiden ausgewählten Slots überschneiden sich miteinander!");
+            return false;
+          }
+        }
+
+        return true;
+      };
+
+      // Save Slot Registration
+      const handleSaveSlot = async (e) => {
+        e.preventDefault();
+        
+        const cleanDjName = djName.trim();
+        const cleanGenre = genre.trim();
+        const cleanPassword = password.trim();
+
+        if (!cleanDjName || !cleanGenre) {
+          alert("Bitte fülle DJ-Namen und Musikrichtung / Beschreibung aus!");
+          return;
+        }
+
+        if (cleanDjName.toUpperCase() === "LEOQUENT") {
+          alert("Der Name 'LEOQUENT' ist für die Hauptbühne reserviert!");
+          return;
+        }
+
+        // Construct proposed slots list
+        const proposedSlots = [];
+        if (slot1Active) {
+          const start = timeToHours(slot1Day, slot1Start);
+          proposedSlots.push({
+            id: `${cleanDjName}_1`,
+            day: slot1Day,
+            startTime: slot1Start,
+            duration: Number(slot1Duration),
+            start: start,
+            end: start + Number(slot1Duration)
+          });
+        }
+        if (slot2Active) {
+          const start = timeToHours(slot2Day, slot2Start);
+          proposedSlots.push({
+            id: `${cleanDjName}_2`,
+            day: slot2Day,
+            startTime: slot2Start,
+            duration: Number(slot2Duration),
+            start: start,
+            end: start + Number(slot2Duration)
+          });
+        }
+
+        // Validate
+        if (!validateSlots(cleanDjName, proposedSlots)) return;
+
+        // Persist
+        if (supabaseClient) {
+          try {
+            // 1. Delete all existing slots for this DJ (foolproof upsert)
+            await supabaseClient.from("slots").delete().eq("dj_name", cleanDjName);
+            
+            // 2. Insert new slots
+            const rowsToInsert = proposedSlots.map(s => ({
+              slot_id: s.id,
+              dj_name: cleanDjName,
+              genre: cleanGenre,
+              day: s.day,
+              start_time: s.startTime,
+              duration: s.duration,
+              start_hours: s.start,
+              end_hours: s.end,
+              password: cleanPassword
+            }));
+
+            const { error } = await supabaseClient.from("slots").insert(rowsToInsert);
+            if (error) throw error;
+          } catch (err) {
+            console.error("Supabase write error:", err);
+            alert("Fehler beim Speichern in der Datenbank!");
+            return;
+          }
+        } else {
+          // Local Storage Mode
+          // 1. Clean up old slots for this DJ name
+          for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+            if (key.startsWith("veenland_slot_")) {
+              try {
+                const data = JSON.parse(localStorage.getItem(key));
+                if (data.djName.toUpperCase() === cleanDjName.toUpperCase()) {
+                  localStorage.removeItem(key);
+                }
+              } catch {}
+            }
+          }
+          // 2. Write new slots
+          proposedSlots.forEach(s => {
+            localStorage.setItem(`veenland_slot_${s.id}`, JSON.stringify({
+              slotId: s.id,
+              djName: cleanDjName,
+              genre: cleanGenre,
+              day: s.day,
+              startTime: s.startTime,
+              duration: s.duration,
+              startHours: s.start,
+              endHours: s.end,
+              password: cleanPassword
+            }));
+          });
+        }
+
+        // Save local tracking info
+        localStorage.setItem("veenland_last_dj_name", cleanDjName);
+        const mySavedIds = proposedSlots.map(s => s.id);
+        setMyRegisteredSlots(mySavedIds);
+        localStorage.setItem("veenland_my_slots", JSON.stringify(mySavedIds));
+
+        setIsModalOpen(false);
+        fetchSlots();
+      };
+
+      // Unregister specific slot
+      const handleDeleteSlot = async () => {
+        if (!openedSlotContext) return;
+
+        const targetId = openedSlotContext.slotId || openedSlotContext.id;
+
+        // Delete specific slot
+        if (supabaseClient) {
+          try {
+            const { error } = await supabaseClient.from("slots").delete().eq("slot_id", targetId);
+            if (error) throw error;
+          } catch (err) {
+            console.error("Supabase delete error:", err);
+            alert("Fehler beim Löschen aus der Datenbank!");
+            return;
+          }
+        } else {
+          // Local Storage Mode
+          localStorage.removeItem(`veenland_slot_${targetId}`);
+        }
+
+        // Remove from device-registered track list
+        const updatedMySlots = myRegisteredSlots.filter(id => id !== targetId);
+        setMyRegisteredSlots(updatedMySlots);
+        localStorage.setItem("veenland_my_slots", JSON.stringify(updatedMySlots));
+
+        setIsModalOpen(false);
+        fetchSlots();
+      };
+
+      // Save Database Settings
+      const handleSaveDbSettings = (e) => {
+        e.preventDefault();
+        const trimmedUrl = dbUrl.trim();
+        const trimmedKey = dbKey.trim();
+
+        if (trimmedUrl && trimmedKey) {
+          localStorage.setItem("veenland_db_url", trimmedUrl);
+          localStorage.setItem("veenland_db_key", trimmedKey);
+        } else {
+          localStorage.removeItem("veenland_db_url");
+          localStorage.removeItem("veenland_db_key");
+          setDbUrl("");
+          setDbKey("");
+        }
+        setIsDbModalOpen(false);
+      };
+
+      // Print page trigger
+      const handlePrint = () => {
+        window.print();
+      };
+
+      // Merge Leoquent slots and registered slots
+      const allMergedSlots = React.useMemo(() => {
+        const list = [...LEOQUENT_SLOTS];
+        Object.values(slotsData).forEach(val => {
+          list.push(val);
+        });
+        return list;
+      }, [slotsData]);
+
+      // Calculate days timeline segments dynamically (SHOW ONLY REGISTERED SLOTS, NO GAPS)
+      const timelineFriday = React.useMemo(() => {
+        return allMergedSlots
+          .filter(s => s.startHours >= 0.0 && s.startHours < 8.0)
+          .sort((a, b) => a.startHours - b.startHours);
+      }, [allMergedSlots]);
+
+      const timelineSaturday = React.useMemo(() => {
+        return allMergedSlots
+          .filter(s => s.startHours >= 8.0 && s.startHours < 30.0)
+          .sort((a, b) => a.startHours - b.startHours);
+      }, [allMergedSlots]);
+
+      const timelineSunday = React.useMemo(() => {
+        return allMergedSlots
+          .filter(s => s.startHours >= 30.0 && s.startHours < 44.0)
+          .sort((a, b) => a.startHours - b.startHours);
+      }, [allMergedSlots]);
+
+
+
+      // Render Day Layout List
+      const renderDayTimeline = (dayName, timeline) => {
+        return React.createElement("div", { key: dayName, className: "print-day-container" },
+          // Day Header
+          React.createElement("div", { className: "day-header" },
+            React.createElement("div", { className: "day-name" }, dayName.toUpperCase()),
+            React.createElement("div", { className: "day-date" }, DATES[dayName])
+          ),
+          
+          // List slots (No gaps rendered here!)
+          timeline.length === 0 ? (
+            React.createElement("div", { 
+              style: { 
+                padding: "20px 0", 
+                fontFamily: "var(--font-mono)", 
+                fontSize: "12px", 
+                color: "var(--muted)", 
+                opacity: 0.5, 
+                fontStyle: "italic" 
+              } 
+            }, "Noch keine DJs eingetragen...")
+          ) : (
+            timeline.map((slot, idx) => {
+              const isLocked = slot.isLocked;
+              const startDetails = hoursToTime(slot.startHours);
+              const endDetails = hoursToTime(slot.endHours);
+              const displayHourLarge = startDetails.timeStr.split(":")[0];
+              
+              return React.createElement("div", { 
+                key: idx,
+                className: `slot-row ${isLocked ? 'locked' : 'interactive'}`.trim(),
+                onClick: () => handleSlotClick(slot)
+              },
+                // Time Label (Left side)
+                React.createElement("div", { className: "slot-time-large" }, displayHourLarge),
+                // Slot Info Details (Right side)
+                React.createElement("div", { className: "slot-content" },
+                  React.createElement("div", { className: "slot-title-row" },
+                    React.createElement("div", { className: "slot-title" }, slot.djName),
+                    React.createElement("div", { className: "slot-time-range" }, 
+                      `${startDetails.timeStr} – ${endDetails.timeStr}`
+                    )
+                  ),
+                  React.createElement("div", { className: "slot-genre" }, formatGenre(slot.genre))
+                )
+              );
+            })
+          )
+        );
+      };
+
+      return React.createElement("div", { className: `timetable-container print-container ${printMode === "perday" ? "print-per-day" : "print-continuous"}` },
+        // Top Bar Controls
+        React.createElement("div", { className: "top-bar-controls no-print" },
+          React.createElement("button", {
+            className: "btn btn-primary",
+            onClick: () => {
+              setDjName(localStorage.getItem("veenland_last_dj_name") || "");
+              setGenre("");
+              setPassword("");
+              setSlot1Active(true);
+              setSlot1Day("Freitag");
+              setSlot1Start("18:00");
+              setSlot1Duration(2.0);
+              setSlot2Active(false);
+              setOpenedSlotContext(null);
+              setDeleteConfirmStep(0);
+              setDeleteConfirmPassword("");
+              setIsModalOpen(true);
+            }
+          }, "SLOT SICHERN"),
+          React.createElement("div", { className: "top-bar-right" },
+            React.createElement("button", {
+              className: "btn",
+              onClick: () => setPrintMode(printMode === "continuous" ? "perday" : "continuous"),
+              title: "Aufteilung für PDF/Druck: durchlaufend (zum Aneinanderkleben) oder eine Seite pro Tag"
+            }, printMode === "continuous" ? "🧾 SEITEN: DURCHLAUFEND" : "🧾 SEITEN: PRO TAG"),
+            React.createElement("span", { className: "group-arrow", "aria-hidden": "true" }, "→"),
+            React.createElement("button", {
+              className: "btn",
+              onClick: handlePrint
+            }, "🖨 DRUCKEN")
+          )
+        ),
+        // Timetable Main Wrapper Card
+        React.createElement("div", { className: "timetable-wrapper" },
+          // Header Bar
+          React.createElement("div", { className: "timetable-header" },
+            React.createElement("span", null, "T I M E T A B L E"),
+            React.createElement("span", { style: { color: "var(--muted)" } }, "das privateste Festival NRWs")
+          ),
+          
+          // Hero Title & Metadata
+          React.createElement("div", { className: "hero-section" },
+            React.createElement("div", null,
+              React.createElement("div", { className: "hero-title" }, "VEEN"),
+              React.createElement("div", { className: "hero-title", style: { WebkitTextStroke: "0px" } }, "LAND")
+            ),
+            React.createElement("div", { className: "hero-fairy" },
+              React.createElement("img", { src: "fairy_orange.png", alt: "Veenland Fairy" }),
+              React.createElement("div", { className: "fairy-sparkles", "aria-hidden": "true" },
+                React.createElement("span", { className: "sparkle" }),
+                React.createElement("span", { className: "sparkle" }),
+                React.createElement("span", { className: "sparkle" }),
+                React.createElement("span", { className: "sparkle" }),
+                React.createElement("span", { className: "sparkle spark-fly" })
+              )
+            ),
+            React.createElement("div", { className: "hero-meta" },
+              React.createElement("div", { className: "meta-dates" }, "24–26", React.createElement("br"), "JULI ’26"),
+              React.createElement("div", { className: "meta-subtitle" }, "FREITAG → SONNTAG", React.createElement("br"), "3 TAGE / 2 NÄCHTE"),
+              React.createElement("div", { className: "meta-divider" }),
+              React.createElement("div", { className: "meta-info" }, "Ein Magisches Wochenende für Freunde & Freundesfreunde."),
+              React.createElement("a", { 
+                className: "meta-location", 
+                href: "https://maps.google.com/?q=Veen,+Alpen,+Deutschland", 
+                target: "_blank", 
+                rel: "noopener noreferrer" 
+              }, "Veen (Alpen), NRW, Deutschland")
+            )
+          ),
+
+          // Legend Header
+          React.createElement("div", { className: "legend-row" },
+            React.createElement("span", { style: { width: "168px" } }, "ZEIT"),
+            React.createElement("span", null, "ACT — GENRE")
+          ),
+
+          // Render days lists
+          renderDayTimeline("Freitag", timelineFriday),
+          renderDayTimeline("Samstag", timelineSaturday),
+          renderDayTimeline("Sonntag", timelineSunday),
+
+          // Footer Quote instead of links (Shorter, meaningful)
+          React.createElement("div", { className: "timetable-footer no-print" },
+            React.createElement("div", { className: "footer-quote" },
+              "„Man muss noch Chaos in sich haben, um einen tanzenden Stern zu gebären.“",
+              React.createElement("br"),
+              React.createElement("span", { style: { fontSize: "11px", opacity: 0.7 } }, "— Friedrich Nietzsche")
+            ),
+            React.createElement("div", { className: "footer-logo" },
+              React.createElement("div", { className: "footer-logo-text" }, "VEENLAND"),
+              React.createElement("div", { className: "footer-stamp" }, 
+                isLiveDb ? "STAND: LIVE SYNCHRONISIERT" : "STAND: LOKALER DEMO-MODUS"
+              )
+            )
+          )
+        ),
+
+        // DJ Registration Modal
+        isModalOpen && React.createElement("div", { className: "modal-overlay no-print" },
+          React.createElement("div", { className: "modal-content" },
+            deleteConfirmStep === 0 ? (
+              // Normal Input Form
+              React.createElement("form", { onSubmit: handleSaveSlot },
+                React.createElement("h3", { className: "modal-title" }, "DJs an den Decks"),
+                React.createElement("div", { className: "form-group" },
+                  React.createElement("label", { className: "form-label" }, "DJ / ACT NAME"),
+                  React.createElement("input", { 
+                    type: "text", 
+                    className: "form-input", 
+                    required: true,
+                    placeholder: "z.B. DJ Fischstäbchen",
+                    value: djName,
+                    onChange: (e) => handleDjNameChange(e.target.value)
+                  })
+                ),
+                React.createElement("div", { className: "form-group" },
+                  React.createElement("label", { className: "form-label" }, "GENRE / MUSIKRICHTUNG"),
+                  React.createElement("input", {
+                    type: "text",
+                    className: "form-input",
+                    required: true,
+                    placeholder: "z.B. Schlager, Heavy Metal, Free Jazz",
+                    value: genre,
+                    onChange: (e) => setGenre(e.target.value)
+                  }),
+                  React.createElement("p", { className: "form-hint" }, "Mehrere Genres bitte mit Komma trennen (z. B. Techno, House, Disco).")
+                ),
+                React.createElement("div", { className: "form-group" },
+                  React.createElement("label", { className: "form-label" }, "PASSWORT (OPTIONAL)"),
+                  React.createElement("input", { 
+                    type: "password", 
+                    className: "form-input", 
+                    placeholder: "Passwort zum Schutz deines Slots",
+                    value: password,
+                    onChange: (e) => setPassword(e.target.value)
+                  }),
+                  !password.trim() && React.createElement("p", { className: "warning-text" }, "⚠ Ohne Passwort kann jeder deinen Slot löschen!")
+                ),
+                
+                React.createElement("div", { style: { marginTop: "25px", marginBottom: "15px" } },
+                  React.createElement("span", { className: "form-label", style: { fontSize: "11px", fontWeight: "bold" } }, "SLOTS AUSWÄHLEN (MAXIMAL 2 SLOTS)")
+                ),
+
+                // SLOT 1 Option Card
+                React.createElement("div", { className: "slot-option-container" },
+                  React.createElement("div", { 
+                    className: "checkbox-row", 
+                    onClick: () => setSlot1Active(!slot1Active) 
+                  },
+                    React.createElement("input", { 
+                      type: "checkbox", 
+                      checked: slot1Active,
+                      onChange: () => {} 
+                    }),
+                    React.createElement("span", { className: "checkbox-label" }, "Slot 1 registrieren")
+                  ),
+                  slot1Active && React.createElement("div", { className: "slot-fields-grid" },
+                    React.createElement("div", null,
+                      React.createElement("label", { className: "form-label" }, "TAG"),
+                      React.createElement("select", { 
+                        className: "form-select", 
+                        value: slot1Day,
+                        onChange: (e) => setSlot1Day(e.target.value)
+                      },
+                        React.createElement("option", { value: "Freitag" }, "Freitag"),
+                        React.createElement("option", { value: "Samstag" }, "Samstag"),
+                        React.createElement("option", { value: "Sonntag" }, "Sonntag")
+                      )
+                    ),
+                    React.createElement("div", null,
+                      React.createElement("label", { className: "form-label" }, "STARTZEIT"),
+                      React.createElement("select", { 
+                        className: "form-select", 
+                        value: slot1Start,
+                        onChange: (e) => setSlot1Start(e.target.value)
+                      },
+                        HOURS_24.map(time => {
+                          const h = timeToHours(slot1Day, time);
+                          const isOccupied = allMergedSlots.some(s => {
+                            if (s.djName && s.djName.toUpperCase() === djName.trim().toUpperCase()) return false;
+                            return h < s.endHours && (h + Number(slot1Duration)) > s.startHours;
+                          });
+                          return React.createElement("option", { key: time, value: time, disabled: isOccupied, style: isOccupied ? { color: '#666' } : {} }, 
+                            isOccupied ? `${time} (belegt)` : time
+                          );
+                        })
+                      )
+                    ),
+                    React.createElement("div", null,
+                      React.createElement("label", { className: "form-label" }, "DAUER"),
+                      React.createElement("select", { 
+                        className: "form-select", 
+                        value: slot1Duration,
+                        onChange: (e) => setSlot1Duration(Number(e.target.value))
+                      },
+                        React.createElement("option", { value: "1" }, "1 Std"),
+                        React.createElement("option", { value: "2" }, "2 Std"),
+                        React.createElement("option", { value: "3" }, "3 Std")
+                      )
+                    )
+                  )
+                ),
+
+                // SLOT 2 Option Card
+                React.createElement("div", { className: "slot-option-container" },
+                  React.createElement("div", { 
+                    className: "checkbox-row", 
+                    onClick: () => setSlot2Active(!slot2Active) 
+                  },
+                    React.createElement("input", { 
+                      type: "checkbox", 
+                      checked: slot2Active,
+                      onChange: () => {} 
+                    }),
+                    React.createElement("span", { className: "checkbox-label" }, "Slot 2 registrieren")
+                  ),
+                  slot2Active && React.createElement("div", { className: "slot-fields-grid" },
+                    React.createElement("div", null,
+                      React.createElement("label", { className: "form-label" }, "TAG"),
+                      React.createElement("select", { 
+                        className: "form-select", 
+                        value: slot2Day,
+                        onChange: (e) => setSlot2Day(e.target.value)
+                      },
+                        React.createElement("option", { value: "Freitag" }, "Freitag"),
+                        React.createElement("option", { value: "Samstag" }, "Samstag"),
+                        React.createElement("option", { value: "Sonntag" }, "Sonntag")
+                      )
+                    ),
+                    React.createElement("div", null,
+                      React.createElement("label", { className: "form-label" }, "STARTZEIT"),
+                      React.createElement("select", { 
+                        className: "form-select", 
+                        value: slot2Start,
+                        onChange: (e) => setSlot2Start(e.target.value)
+                      },
+                        HOURS_24.map(time => {
+                          const h = timeToHours(slot2Day, time);
+                          const isOccupied = allMergedSlots.some(s => {
+                            if (s.djName && s.djName.toUpperCase() === djName.trim().toUpperCase()) return false;
+                            return h < s.endHours && (h + Number(slot2Duration)) > s.startHours;
+                          });
+                          return React.createElement("option", { key: time, value: time, disabled: isOccupied, style: isOccupied ? { color: '#666' } : {} }, 
+                            isOccupied ? `${time} (belegt)` : time
+                          );
+                        })
+                      )
+                    ),
+                    React.createElement("div", null,
+                      React.createElement("label", { className: "form-label" }, "DAUER"),
+                      React.createElement("select", { 
+                        className: "form-select", 
+                        value: slot2Duration,
+                        onChange: (e) => setSlot2Duration(Number(e.target.value))
+                      },
+                        React.createElement("option", { value: "1" }, "1 Std"),
+                        React.createElement("option", { value: "2" }, "2 Std"),
+                        React.createElement("option", { value: "3" }, "3 Std")
+                      )
+                    )
+                  )
+                ),
+
+                React.createElement("div", { className: "modal-actions" },
+                  (openedSlotContext && !openedSlotContext.isGap) && React.createElement("button", { 
+                    type: "button", 
+                    className: "btn btn-delete",
+                    onClick: () => {
+                      setDeleteConfirmStep(1);
+                      setDeleteConfirmPassword("");
+                    }
+                  }, "SLOT FREIGEBEN"),
+                  React.createElement("button", { 
+                    type: "button", 
+                    className: "btn",
+                    onClick: () => setIsModalOpen(false)
+                  }, "ABBRECHEN"),
+                  React.createElement("button", { 
+                    type: "submit", 
+                    className: "btn btn-primary"
+                  }, "SPEICHERN")
+                ),
+                React.createElement("p", { className: "warning-text" }, "* Jeder DJ kann maximal 2 Slots registrieren. Slots können 1 bis 3 Stunden dauern.")
+              )
+            ) : (
+              // Custom Delete Confirmation Screen inside modal
+              React.createElement("div", null,
+                React.createElement("h3", { className: "modal-title", style: { color: "#f44336" } }, "Slot freigeben"),
+                (() => {
+                  const slotPassword = openedSlotContext.password || "";
+                  const hasPassword = slotPassword.length > 0;
+                  
+                  if (!hasPassword) {
+                    // No password was set – allow deletion freely
+                    return React.createElement(React.Fragment, null,
+                      React.createElement("p", { style: { fontSize: "14px", color: "var(--white)", marginBottom: "20px", lineHeight: "1.6" } },
+                        "Dieser Slot hat kein Passwort. Möchtest du ihn wirklich freigeben?"
+                      ),
+                      React.createElement("div", { className: "modal-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "btn",
+                          onClick: () => setDeleteConfirmStep(0)
+                        }, "ZURÜCK"),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "btn btn-delete",
+                          onClick: handleDeleteSlot
+                        }, "JA, FREIGEBEN")
+                      )
+                    );
+                  } else {
+                    // Password protected – require password to delete
+                    return React.createElement(React.Fragment, null,
+                      React.createElement("p", { style: { fontSize: "14px", color: "var(--white)", marginBottom: "20px", lineHeight: "1.6" } },
+                        `Dieser Slot von '${openedSlotContext.djName}' ist passwortgeschützt. Gib das Passwort ein, um ihn freizugeben:`
+                      ),
+                      React.createElement("div", { className: "form-group" },
+                        React.createElement("label", { className: "form-label" }, "PASSWORT"),
+                        React.createElement("input", {
+                          type: "password",
+                          className: "form-input",
+                          placeholder: "Passwort eingeben",
+                          value: deleteConfirmPassword,
+                          onChange: (e) => setDeleteConfirmPassword(e.target.value)
+                        })
+                      ),
+                      React.createElement("div", { className: "modal-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "btn",
+                          onClick: () => setDeleteConfirmStep(0)
+                        }, "ZURÜCK"),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "btn btn-delete",
+                          disabled: deleteConfirmPassword.trim() !== slotPassword,
+                          onClick: handleDeleteSlot
+                        }, "JA, FREIGEBEN")
+                      )
+                    );
+                  }
+                })()
+              )
+            )
+          )
+        ),
+
+        // Database Configuration Modal (Supabase Setup)
+        isDbModalOpen && React.createElement("div", { className: "modal-overlay no-print" },
+          React.createElement("div", { className: "modal-content", style: { maxWidth: "600px" } },
+            React.createElement("h3", { className: "modal-title" }, "Online-Datenbank verbinden"),
+            React.createElement("p", { style: { fontSize: "13px", color: "var(--muted)", marginBottom: "15px", lineHeight: "1.6" } },
+              "Damit alle DJs ihre Slots auf ihren eigenen Handys sehen und synchronisieren können, kannst du hier ein kostenloses Supabase-Projekt verbinden. Trage die Daten hier ein oder füge sie direkt in deiner 'Veenland Timetable.html' in Zeile 563 ein."
+            ),
+            React.createElement("form", { onSubmit: handleSaveDbSettings },
+              React.createElement("div", { className: "form-group" },
+                React.createElement("label", { className: "form-label" }, "SUPABASE URL"),
+                React.createElement("input", { 
+                  type: "text", 
+                  className: "form-input", 
+                  placeholder: "https://xxxxxx.supabase.co",
+                  value: dbUrl,
+                  onChange: (e) => setDbUrl(e.target.value)
+                })
+              ),
+              React.createElement("div", { className: "form-group" },
+                React.createElement("label", { className: "form-label" }, "SUPABASE PUBLIC ANON KEY"),
+                React.createElement("input", { 
+                  type: "text", 
+                  className: "form-input", 
+                  placeholder: "eyJhbGciOiJIUzI1NiIsIn...",
+                  value: dbKey,
+                  onChange: (e) => setDbKey(e.target.value)
+                })
+              ),
+              React.createElement("p", { className: "form-label", style: { marginTop: "15px", marginBottom: "5px" } }, "1. SQL QUERY IN SUPABASE AUSFÜHREN:"),
+              React.createElement("div", { className: "sql-code-box" },
+                `CREATE TABLE slots (
+  slot_id TEXT PRIMARY KEY,
+  dj_name TEXT NOT NULL,
+  genre TEXT NOT NULL,
+  day TEXT NOT NULL,
+  start_time TEXT NOT NULL,
+  duration NUMERIC NOT NULL,
+  start_hours NUMERIC NOT NULL,
+  end_hours NUMERIC NOT NULL,
+  password TEXT DEFAULT '',
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- RLS aktivieren für öffentlichen Schreibzugriff
+ALTER TABLE slots ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public Read" ON slots FOR SELECT USING (true);
+CREATE POLICY "Public Insert" ON slots FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public Delete" ON slots FOR DELETE USING (true);`
+              ),
+              React.createElement("div", { className: "modal-actions" },
+                React.createElement("button", { 
+                  type: "button", 
+                  className: "btn",
+                  onClick: () => {
+                    setDbUrl("");
+                    setDbKey("");
+                    localStorage.removeItem("veenland_db_url");
+                    localStorage.removeItem("veenland_db_key");
+                    setIsDbModalOpen(false);
+                    fetchSlots();
+                  }
+                }, "Trennen / Demo-Modus"),
+                React.createElement("button", { 
+                  type: "button", 
+                  className: "btn",
+                  onClick: () => setIsDbModalOpen(false)
+                }, "ABBRECHEN"),
+                React.createElement("button", { 
+                  type: "submit", 
+                  className: "btn btn-primary"
+                }, "VERBINDEN")
+              )
+            )
+          )
+        )
+      );
+    }
+
+    // Mount App
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>
