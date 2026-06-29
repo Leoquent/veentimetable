@@ -192,6 +192,10 @@
       justify-content: center;
       align-self: end;
       position: relative; /* Anker für die Funken-Ebene */
+      /* Alle Effekte (Glühen/Funken) unterhalb des Bildzuschnitts abschneiden.
+         Seiten & oben bleiben offen (negativ = nicht klippen); Unterkante exakt
+         an den Füßen der Fee (-5px gleicht das top:5px-Offset des Bildes aus). */
+      clip-path: inset(-200px -200px -5px -200px);
     }
 
     .hero-fairy img {
@@ -1430,7 +1434,9 @@
           // Footer Quote instead of links (Shorter, meaningful)
           React.createElement("div", { className: "timetable-footer no-print" },
             React.createElement("div", { className: "footer-quote" },
-              "„Man muss noch Chaos in sich haben, um einen tanzenden Stern zu gebären.“",
+              "„Man muss noch Chaos in sich haben,",
+              React.createElement("br"),
+              "um einen tanzenden Stern zu gebären.“",
               React.createElement("br"),
               React.createElement("span", { style: { fontSize: "11px", opacity: 0.7 } }, "— Friedrich Nietzsche")
             ),
