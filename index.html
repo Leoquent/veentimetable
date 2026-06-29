@@ -456,14 +456,6 @@
       text-transform: uppercase;
     }
 
-    .footer-stamp {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.16em;
-      color: var(--muted);
-      margin-top: 6px;
-    }
-
     /* Modal Overlay System */
     .modal-overlay {
       position: fixed;
@@ -816,42 +808,42 @@
     }
 
     // Helpers to translate day/time to hours and back
-    // Wandelt (Festival-Tag, "HH:MM") in Festival-Stunden seit Freitag 18:00 um.
-    // Muss exakt die Umkehrung von hoursToTime sein. Konvention (Nacht-Rollover
-    // um 02:00 – ein „Festival-Tag" reicht bis 02:00 der Folgenacht):
-    //   Freitag = Fr 18:00 .. Sa 02:00   (00:00/01:00 = früher Samstagmorgen)
-    //   Samstag = Sa 02:00 .. So 02:00   (00:00/01:00 = früher Sonntagmorgen)
-    //   Sonntag = So 02:00 .. So 14:00
+    // Wandelt (Tag, "HH:MM") in Festival-Stunden seit Freitag 18:00 um.
+    // Ganz normale Kalenderzeit: jeder Tag beginnt um 00:00, der Tag der Auswahl
+    // bestimmt das Datum. Festivalzeitraum: Freitag 18:00 .. Sonntag 14:00.
+    //   Freitag = Fr 00:00.. (gültig ab 18:00)   -> abs = h
+    //   Samstag = Sa 00:00..24:00                -> abs = 24 + h
+    //   Sonntag = So 00:00..14:00                -> abs = 48 + h
     function timeToHours(day, timeStr) {
       const [h, m] = timeStr.split(":").map(Number);
-      let abs; // Stunden seit Freitag 00:00
-      if (day === "Freitag") {
-        abs = (h >= 2) ? h : 24 + h;        // 00:00/01:00 -> Samstag früh
-      } else if (day === "Samstag") {
-        abs = (h >= 2) ? 24 + h : 48 + h;   // 00:00/01:00 -> Sonntag früh
-      } else { // Sonntag
+      let abs; // Stunden seit Freitag 00:00 (Kalenderzeit)
+      if (day === "Samstag") {
+        abs = 24 + h;
+      } else if (day === "Sonntag") {
         abs = 48 + h;
+      } else { // Freitag
+        abs = h;
       }
       return abs + m / 60 - 18.0; // Freitag 18:00 = Stunde 0
     }
 
     function hoursToTime(hours) {
-      const absoluteHours = hours + 18.0;
+      const absoluteHours = hours + 18.0; // Stunden seit Freitag 00:00
       let day = "Freitag";
       let h = 0;
       let m = Math.round((absoluteHours % 1) * 60);
-      
-      if (absoluteHours < 26.0) {
+
+      if (absoluteHours < 24.0) {
         day = "Freitag";
-        h = Math.floor(absoluteHours) % 24;
-      } else if (absoluteHours < 50.0) {
+        h = Math.floor(absoluteHours);
+      } else if (absoluteHours < 48.0) {
         day = "Samstag";
-        h = Math.floor(absoluteHours - 24.0) % 24;
+        h = Math.floor(absoluteHours - 24.0);
       } else {
         day = "Sonntag";
         h = Math.floor(absoluteHours - 48.0);
       }
-      
+
       const pad = (n) => String(n).padStart(2, "0");
       return {
         day,
@@ -1279,21 +1271,25 @@
       }, [slotsData]);
 
       // Calculate days timeline segments dynamically (SHOW ONLY REGISTERED SLOTS, NO GAPS)
+      // Gruppierung nach Kalendertag (Startzeit entscheidet):
+      //   Freitag = Stunde 0..6   (Fr 18:00..24:00)
+      //   Samstag = Stunde 6..30  (Sa 00:00..24:00)
+      //   Sonntag = Stunde 30..44 (So 00:00..14:00)
       const timelineFriday = React.useMemo(() => {
         return allMergedSlots
-          .filter(s => s.startHours >= 0.0 && s.startHours < 8.0)
+          .filter(s => s.startHours >= 0.0 && s.startHours < 6.0)
           .sort((a, b) => a.startHours - b.startHours);
       }, [allMergedSlots]);
 
       const timelineSaturday = React.useMemo(() => {
         return allMergedSlots
-          .filter(s => s.startHours >= 8.0 && s.startHours < 32.0)
+          .filter(s => s.startHours >= 6.0 && s.startHours < 30.0)
           .sort((a, b) => a.startHours - b.startHours);
       }, [allMergedSlots]);
 
       const timelineSunday = React.useMemo(() => {
         return allMergedSlots
-          .filter(s => s.startHours >= 32.0 && s.startHours < 44.0)
+          .filter(s => s.startHours >= 30.0 && s.startHours < 44.0)
           .sort((a, b) => a.startHours - b.startHours);
       }, [allMergedSlots]);
 
@@ -1436,10 +1432,7 @@
               React.createElement("span", { style: { fontSize: "11px", opacity: 0.7 } }, "— Friedrich Nietzsche")
             ),
             React.createElement("div", { className: "footer-logo" },
-              React.createElement("div", { className: "footer-logo-text" }, "VEENLAND"),
-              React.createElement("div", { className: "footer-stamp" }, 
-                isLiveDb ? "STAND: LIVE SYNCHRONISIERT" : "STAND: LOKALER DEMO-MODUS"
-              )
+              React.createElement("div", { className: "footer-logo-text" }, "VEENLAND")
             )
           )
         ),
