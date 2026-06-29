@@ -1,18 +1,15 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Veenland Timetable 2026</title>
-
+  
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap"
-    rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
   <!-- React & Supabase CDNs -->
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
@@ -64,8 +61,7 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      margin: 0 auto 20px;
-      /* auto = exakt über dem Timetable ausgerichtet */
+      margin: 0 auto 20px; /* auto = exakt über dem Timetable ausgerichtet */
       width: 100%;
       max-width: 880px;
     }
@@ -97,7 +93,6 @@
       border-color: transparent;
       background: rgba(255, 255, 255, 0.04);
     }
-
     .top-bar-right .btn:hover {
       background: var(--accent);
       border-color: var(--accent);
@@ -152,7 +147,6 @@
       cursor: default;
       font-size: 10px;
     }
-
     .btn-status:hover {
       background: transparent;
       color: var(--muted);
@@ -166,14 +160,8 @@
       border-radius: 50%;
       display: inline-block;
     }
-
-    .status-dot.green {
-      background: #4caf50;
-    }
-
-    .status-dot.orange {
-      background: #ff9800;
-    }
+    .status-dot.green { background: #4caf50; }
+    .status-dot.orange { background: #ff9800; }
 
     /* Timetable Top Header */
     .timetable-header {
@@ -203,8 +191,7 @@
       align-items: flex-end;
       justify-content: center;
       align-self: end;
-      position: relative;
-      /* Anker für die Funken-Ebene */
+      position: relative; /* Anker für die Funken-Ebene */
     }
 
     .hero-fairy img {
@@ -214,8 +201,7 @@
       transition: opacity 0.3s ease;
       display: block;
       position: relative;
-      top: 5px;
-      /* fest nach unten gesetzt, bündig mit "LAND" – kein Schweben */
+      top: 5px; /* fest nach unten gesetzt, bündig mit "LAND" – kein Schweben */
       z-index: 1;
     }
 
@@ -236,44 +222,17 @@
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: radial-gradient(circle, #ffffff 0%, var(--accent) 55%, rgba(224, 85, 47, 0) 100%);
+      background: radial-gradient(circle, #ffffff 0%, var(--accent) 55%, rgba(224,85,47,0) 100%);
       box-shadow: 0 0 6px 1px rgba(255, 190, 120, 0.8);
       opacity: 0;
       will-change: transform, opacity;
     }
 
     /* Vier funkelnde Punkte – an Ort und Stelle aufleuchtend */
-    .sparkle:nth-child(1) {
-      top: 16%;
-      left: 30%;
-      animation: twinkle 3.2s ease-in-out infinite;
-      animation-delay: 0s;
-    }
-
-    .sparkle:nth-child(2) {
-      top: 42%;
-      left: 70%;
-      width: 5px;
-      height: 5px;
-      animation: twinkle 2.6s ease-in-out infinite;
-      animation-delay: 0.7s;
-    }
-
-    .sparkle:nth-child(3) {
-      top: 64%;
-      left: 24%;
-      width: 5px;
-      height: 5px;
-      animation: twinkle 3.8s ease-in-out infinite;
-      animation-delay: 1.3s;
-    }
-
-    .sparkle:nth-child(4) {
-      top: 26%;
-      left: 60%;
-      animation: twinkle 3.0s ease-in-out infinite;
-      animation-delay: 1.9s;
-    }
+    .sparkle:nth-child(1) { top: 16%; left: 30%; animation: twinkle 3.2s ease-in-out infinite; animation-delay: 0s; }
+    .sparkle:nth-child(2) { top: 42%; left: 70%; width: 5px; height: 5px; animation: twinkle 2.6s ease-in-out infinite; animation-delay: 0.7s; }
+    .sparkle:nth-child(3) { top: 64%; left: 24%; width: 5px; height: 5px; animation: twinkle 3.8s ease-in-out infinite; animation-delay: 1.3s; }
+    .sparkle:nth-child(4) { top: 26%; left: 60%; animation: twinkle 3.0s ease-in-out infinite; animation-delay: 1.9s; }
 
     /* Ein kleiner Funke, der in einem Bogen um die Fee fliegt */
     .sparkle.spark-fly {
@@ -285,59 +244,23 @@
     }
 
     @keyframes twinkle {
-
-      0%,
-      100% {
-        opacity: 0;
-        transform: scale(0.4);
-      }
-
-      50% {
-        opacity: 1;
-        transform: scale(1.15);
-      }
+      0%, 100% { opacity: 0; transform: scale(0.4); }
+      50%      { opacity: 1; transform: scale(1.15); }
     }
 
     @keyframes sparkFly {
-      0% {
-        opacity: 0;
-        transform: translate(0, 0) scale(0);
-      }
-
-      12% {
-        opacity: 1;
-        transform: translate(20px, -16px) scale(1);
-      }
-
-      30% {
-        transform: translate(34px, -40px) scale(1.1);
-      }
-
-      50% {
-        opacity: 1;
-        transform: translate(2px, -66px) scale(0.9);
-      }
-
-      70% {
-        transform: translate(-32px, -42px) scale(1.1);
-      }
-
-      88% {
-        opacity: 1;
-        transform: translate(-20px, -16px) scale(1);
-      }
-
-      100% {
-        opacity: 0;
-        transform: translate(0, 0) scale(0);
-      }
+      0%   { opacity: 0; transform: translate(0, 0) scale(0); }
+      12%  { opacity: 1; transform: translate(20px, -16px) scale(1); }
+      30%  { transform: translate(34px, -40px) scale(1.1); }
+      50%  { opacity: 1; transform: translate(2px, -66px) scale(0.9); }
+      70%  { transform: translate(-32px, -42px) scale(1.1); }
+      88%  { opacity: 1; transform: translate(-20px, -16px) scale(1); }
+      100% { opacity: 0; transform: translate(0, 0) scale(0); }
     }
 
     /* Animationen bei reduzierter Bewegung deaktivieren (nur die Funken) */
     @media (prefers-reduced-motion: reduce) {
-      .fairy-sparkles {
-        display: none;
-      }
+      .fairy-sparkles { display: none; }
     }
 
     .hero-title {
@@ -399,7 +322,6 @@
       display: inline-block;
       transition: opacity 0.2s ease;
     }
-
     .meta-location:hover {
       opacity: 0.8;
       text-decoration: underline;
@@ -483,9 +405,8 @@
       font-size: 34px;
       line-height: 1;
       letter-spacing: -0.01em;
-      color: var(--accent);
-      text-transform: uppercase;
-      /* Einheitlich in Versalien */
+      color: var(--accent); 
+      text-transform: uppercase; /* Einheitlich in Versalien */
     }
 
     .slot-time-range {
@@ -550,13 +471,8 @@
     }
 
     @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-
-      to {
-        opacity: 1;
-      }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     .modal-content {
@@ -573,15 +489,8 @@
     }
 
     @keyframes slideUp {
-      from {
-        transform: translateY(20px);
-        opacity: 0;
-      }
-
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
 
     .modal-title {
@@ -636,13 +545,13 @@
 
     /* Checkbox & nested slot selector cards */
     .slot-option-container {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
       border-radius: 6px;
       padding: 16px;
       margin-bottom: 16px;
     }
-
+    
     .checkbox-row {
       display: flex;
       align-items: center;
@@ -685,7 +594,6 @@
       outline: none;
       font-family: var(--font-archivo);
     }
-
     .form-select:focus {
       border-color: var(--accent);
     }
@@ -703,7 +611,6 @@
       color: #f44336;
       border-color: rgba(244, 67, 54, 0.2);
     }
-
     .btn-delete:hover {
       background: #f44336;
       color: var(--white);
@@ -728,7 +635,7 @@
       overflow-x: auto;
       white-space: pre;
       margin: 12px 0;
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255,255,255,0.05);
       max-height: 150px;
     }
 
@@ -738,29 +645,23 @@
       .timetable-wrapper {
         padding: 24px 20px 20px;
       }
-
       .hero-section {
         grid-template-columns: 1fr;
         gap: 20px;
       }
-
       .hero-title {
         font-size: 100px;
       }
-
       .slot-row {
         grid-template-columns: 100px 1fr;
         gap: 16px;
       }
-
       .slot-time-large {
         font-size: 50px;
       }
-
       .slot-title {
         font-size: 22px;
       }
-
       .slot-fields-grid {
         grid-template-columns: 1fr;
       }
@@ -774,7 +675,6 @@
        Aufteilung über .print-continuous / .print-per-day.
        ==================================================================== */
     @media print {
-
       /* Seitenrand = 0, damit der dunkle Hintergrund randlos die ganze Seite
          füllt (weiße Papierränder lassen sich nicht einfärben). Der eigentliche
          „Rand" wird als dunkles Padding im Wrapper / in den Tages-Containern
@@ -792,13 +692,8 @@
         print-color-adjust: exact;
       }
 
-      .no-print {
-        display: none !important;
-      }
-
-      .fairy-sparkles {
-        display: none !important;
-      }
+      .no-print { display: none !important; }
+      .fairy-sparkles { display: none !important; }
 
       .timetable-wrapper {
         border: none !important;
@@ -825,20 +720,9 @@
         page-break-inside: avoid;
         break-inside: avoid;
       }
-
-      .hero-title {
-        font-size: 90px !important;
-        line-height: 0.82 !important;
-      }
-
-      .meta-dates {
-        font-size: 22px !important;
-      }
-
-      .meta-subtitle,
-      .meta-info {
-        font-size: 11px !important;
-      }
+      .hero-title { font-size: 90px !important; line-height: 0.82 !important; }
+      .meta-dates { font-size: 22px !important; }
+      .meta-subtitle, .meta-info { font-size: 11px !important; }
 
       /* Fee statisch (Funken werden im Druck ausgeblendet), kleiner */
       .hero-fairy img {
@@ -854,24 +738,13 @@
         page-break-inside: avoid;
         break-inside: avoid;
       }
-
-      .slot-time-large {
-        font-size: 58px !important;
-      }
-
-      .slot-title {
-        font-size: 24px !important;
-      }
-
-      .day-name {
-        font-size: 28px !important;
-      }
+      .slot-time-large { font-size: 58px !important; }
+      .slot-title { font-size: 24px !important; }
+      .day-name { font-size: 28px !important; }
 
       .day-header {
-        page-break-inside: avoid;
-        break-inside: avoid;
-        page-break-after: avoid;
-        break-after: avoid;
+        page-break-inside: avoid; break-inside: avoid;
+        page-break-after: avoid; break-after: avoid;
       }
 
       /* MODUS „Pro Tag": jeder Tag startet auf einer neuen Seite.
@@ -883,12 +756,10 @@
         padding-top: 14mm !important;
         padding-bottom: 14mm !important;
       }
-
       .print-per-day .print-day-container:first-of-type {
         page-break-before: avoid;
         break-before: avoid;
-        padding-top: 0 !important;
-        /* Wrapper-Padding deckt die erste Seite oben ab */
+        padding-top: 0 !important; /* Wrapper-Padding deckt die erste Seite oben ab */
       }
 
       /* MODUS „Durchlaufend": kein erzwungener Umbruch — zum Aneinanderkleben */
@@ -899,7 +770,6 @@
     }
   </style>
 </head>
-
 <body>
 
   <!-- Main Timetable Container -->
@@ -909,7 +779,7 @@
     // Database credentials configuration
     // Paste your Supabase credentials below to activate real-time database sync.
     // If left empty, the application operates in offline "Demo Mode" (Local Storage).
-    const SUPABASE_URL = "https://skwlshjgktangyxonygg.supabase.co";
+    const SUPABASE_URL = "https://skwlshjgktangyxonygg.supabase.co"; 
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrd2xzaGpna3Rhbmd5eG9ueWdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3NjU0NjIsImV4cCI6MjA5ODM0MTQ2Mn0.6-kyV6NiNDR--vqMmXeYGGbeFLyGcHU357HdZFVpmoc";
 
     // Day Dates
@@ -994,12 +864,12 @@
           return [];
         }
       });
-
+      
       // Form Input State
       const [djName, setDjName] = React.useState("");
       const [genre, setGenre] = React.useState("");
       const [password, setPassword] = React.useState("");
-
+      
       // Slot 1
       const [slot1Active, setSlot1Active] = React.useState(true);
       const [slot1Day, setSlot1Day] = React.useState("Freitag");
@@ -1011,18 +881,18 @@
       const [slot2Day, setSlot2Day] = React.useState("Freitag");
       const [slot2Start, setSlot2Start] = React.useState("18:00");
       const [slot2Duration, setSlot2Duration] = React.useState(2.0);
-
+      
       const [isModalOpen, setIsModalOpen] = React.useState(false);
       const [isDbModalOpen, setIsDbModalOpen] = React.useState(false);
       const [openedSlotContext, setOpenedSlotContext] = React.useState(null);
-
+      
       // Delete Confirmation Step state (0: form, 1: confirm view)
       const [deleteConfirmStep, setDeleteConfirmStep] = React.useState(0);
       const [deleteConfirmPassword, setDeleteConfirmPassword] = React.useState("");
-
+      
       const [dbUrl, setDbUrl] = React.useState(() => localStorage.getItem("veenland_db_url") || SUPABASE_URL);
       const [dbKey, setDbKey] = React.useState(() => localStorage.getItem("veenland_db_key") || SUPABASE_ANON_KEY);
-
+      
       const [status, setStatus] = React.useState("Lokal (Demo-Modus)");
       const [statusColor, setStatusColor] = React.useState("orange");
 
@@ -1050,9 +920,9 @@
             const { data, error } = await supabaseClient
               .from("slots")
               .select("slot_id, dj_name, genre, day, start_time, duration, start_hours, end_hours, password");
-
+            
             if (error) throw error;
-
+            
             const mapping = {};
             if (data) {
               data.forEach(row => {
@@ -1086,7 +956,7 @@
               const slotId = key.replace("veenland_slot_", "");
               try {
                 localData[slotId] = JSON.parse(localStorage.getItem(key));
-              } catch { }
+              } catch {}
             }
           }
           setSlotsData(localData);
@@ -1115,7 +985,7 @@
         const mySlots = Object.values(slotsData).filter(s => s.djName.toUpperCase() === name.trim().toUpperCase());
         if (mySlots.length > 0) {
           setGenre(mySlots[0].genre);
-
+          
           // Load Slot 1
           const s1 = mySlots[0];
           setSlot1Active(true);
@@ -1147,10 +1017,10 @@
         setDjName(slot.djName);
         setGenre(slot.genre);
         setPassword(""); // Never pre-fill password for security
-
+        
         // Load all slots for this specific DJ
         const djSlots = Object.values(slotsData).filter(s => s.djName.toUpperCase() === slot.djName.toUpperCase());
-
+        
         const s1 = djSlots[0];
         setSlot1Active(true);
         setSlot1Day(s1.day);
@@ -1185,7 +1055,7 @@
 
         for (let i = 0; i < pSlots.length; i++) {
           const s = pSlots[i];
-
+          
           if (s.start < 0.0 || s.end > 44.0) {
             alert(`Der Slot liegt außerhalb der Festivalzeit (Freitag 18:00 – Sonntag 14:00)!`);
             return false;
@@ -1229,7 +1099,7 @@
       // Save Slot Registration
       const handleSaveSlot = async (e) => {
         e.preventDefault();
-
+        
         const cleanDjName = djName.trim();
         const cleanGenre = genre.trim();
         const cleanPassword = password.trim();
@@ -1277,7 +1147,7 @@
           try {
             // 1. Delete all existing slots for this DJ (foolproof upsert)
             await supabaseClient.from("slots").delete().eq("dj_name", cleanDjName);
-
+            
             // 2. Insert new slots
             const rowsToInsert = proposedSlots.map(s => ({
               slot_id: s.id,
@@ -1309,7 +1179,7 @@
                 if (data.djName.toUpperCase() === cleanDjName.toUpperCase()) {
                   localStorage.removeItem(key);
                 }
-              } catch { }
+              } catch {}
             }
           }
           // 2. Write new slots
@@ -1433,18 +1303,18 @@
             React.createElement("div", { className: "day-name" }, dayName.toUpperCase()),
             React.createElement("div", { className: "day-date" }, DATES[dayName])
           ),
-
+          
           // List slots (No gaps rendered here!)
           timeline.length === 0 ? (
-            React.createElement("div", {
-              style: {
-                padding: "20px 0",
-                fontFamily: "var(--font-mono)",
-                fontSize: "12px",
-                color: "var(--muted)",
-                opacity: 0.5,
-                fontStyle: "italic"
-              }
+            React.createElement("div", { 
+              style: { 
+                padding: "20px 0", 
+                fontFamily: "var(--font-mono)", 
+                fontSize: "12px", 
+                color: "var(--muted)", 
+                opacity: 0.5, 
+                fontStyle: "italic" 
+              } 
             }, "Noch keine DJs eingetragen...")
           ) : (
             timeline.map((slot, idx) => {
@@ -1452,8 +1322,8 @@
               const startDetails = hoursToTime(slot.startHours);
               const endDetails = hoursToTime(slot.endHours);
               const displayHourLarge = startDetails.timeStr.split(":")[0];
-
-              return React.createElement("div", {
+              
+              return React.createElement("div", { 
                 key: idx,
                 className: `slot-row ${isLocked ? 'locked' : 'interactive'}`.trim(),
                 onClick: () => handleSlotClick(slot)
@@ -1464,7 +1334,7 @@
                 React.createElement("div", { className: "slot-content" },
                   React.createElement("div", { className: "slot-title-row" },
                     React.createElement("div", { className: "slot-title" }, slot.djName),
-                    React.createElement("div", { className: "slot-time-range" },
+                    React.createElement("div", { className: "slot-time-range" }, 
                       `${startDetails.timeStr} – ${endDetails.timeStr}`
                     )
                   ),
@@ -1516,7 +1386,7 @@
             React.createElement("span", null, "T I M E T A B L E"),
             React.createElement("span", { style: { color: "var(--muted)" } }, "das privateste Festival NRWs")
           ),
-
+          
           // Hero Title & Metadata
           React.createElement("div", { className: "hero-section" },
             React.createElement("div", null,
@@ -1534,15 +1404,15 @@
               )
             ),
             React.createElement("div", { className: "hero-meta" },
-              React.createElement("div", { className: "meta-dates" }, "24.–26.", React.createElement("br"), "JULI 2026"),
+              React.createElement("div", { className: "meta-dates" }, "24.–26.", React.createElement("br"), "Juli 2026"),
               React.createElement("div", { className: "meta-subtitle" }, "FREITAG → SONNTAG", React.createElement("br"), "3 TAGE / 2 NÄCHTE"),
               React.createElement("div", { className: "meta-divider" }),
               React.createElement("div", { className: "meta-info" }, "Ein Magisches Wochenende für Freunde & Freundesfreunde."),
-              React.createElement("a", {
-                className: "meta-location",
-                href: "https://maps.google.com/?q=Veen,+Alpen,+Deutschland",
-                target: "_blank",
-                rel: "noopener noreferrer"
+              React.createElement("a", { 
+                className: "meta-location", 
+                href: "https://maps.google.com/?q=Veen,+Alpen,+Deutschland", 
+                target: "_blank", 
+                rel: "noopener noreferrer" 
               }, "Veen (Alpen), NRW, Deutschland")
             )
           ),
@@ -1576,9 +1446,9 @@
                 React.createElement("h3", { className: "modal-title" }, "DJs an den Decks"),
                 React.createElement("div", { className: "form-group" },
                   React.createElement("label", { className: "form-label" }, "DJ / ACT NAME"),
-                  React.createElement("input", {
-                    type: "text",
-                    className: "form-input",
+                  React.createElement("input", { 
+                    type: "text", 
+                    className: "form-input", 
                     required: true,
                     placeholder: "z.B. DJ Fischstäbchen",
                     value: djName,
@@ -1599,38 +1469,38 @@
                 ),
                 React.createElement("div", { className: "form-group" },
                   React.createElement("label", { className: "form-label" }, "PASSWORT (OPTIONAL)"),
-                  React.createElement("input", {
-                    type: "password",
-                    className: "form-input",
+                  React.createElement("input", { 
+                    type: "password", 
+                    className: "form-input", 
                     placeholder: "Passwort zum Schutz deines Slots",
                     value: password,
                     onChange: (e) => setPassword(e.target.value)
                   }),
                   !password.trim() && React.createElement("p", { className: "warning-text" }, "⚠ Ohne Passwort kann jeder deinen Slot löschen!")
                 ),
-
+                
                 React.createElement("div", { style: { marginTop: "25px", marginBottom: "15px" } },
                   React.createElement("span", { className: "form-label", style: { fontSize: "11px", fontWeight: "bold" } }, "SLOTS AUSWÄHLEN (MAXIMAL 2 SLOTS)")
                 ),
 
                 // SLOT 1 Option Card
                 React.createElement("div", { className: "slot-option-container" },
-                  React.createElement("div", {
-                    className: "checkbox-row",
-                    onClick: () => setSlot1Active(!slot1Active)
+                  React.createElement("div", { 
+                    className: "checkbox-row", 
+                    onClick: () => setSlot1Active(!slot1Active) 
                   },
-                    React.createElement("input", {
-                      type: "checkbox",
+                    React.createElement("input", { 
+                      type: "checkbox", 
                       checked: slot1Active,
-                      onChange: () => { }
+                      onChange: () => {} 
                     }),
                     React.createElement("span", { className: "checkbox-label" }, "Slot 1 registrieren")
                   ),
                   slot1Active && React.createElement("div", { className: "slot-fields-grid" },
                     React.createElement("div", null,
                       React.createElement("label", { className: "form-label" }, "TAG"),
-                      React.createElement("select", {
-                        className: "form-select",
+                      React.createElement("select", { 
+                        className: "form-select", 
                         value: slot1Day,
                         onChange: (e) => setSlot1Day(e.target.value)
                       },
@@ -1641,8 +1511,8 @@
                     ),
                     React.createElement("div", null,
                       React.createElement("label", { className: "form-label" }, "STARTZEIT"),
-                      React.createElement("select", {
-                        className: "form-select",
+                      React.createElement("select", { 
+                        className: "form-select", 
                         value: slot1Start,
                         onChange: (e) => setSlot1Start(e.target.value)
                       },
@@ -1664,8 +1534,8 @@
                     ),
                     React.createElement("div", null,
                       React.createElement("label", { className: "form-label" }, "DAUER"),
-                      React.createElement("select", {
-                        className: "form-select",
+                      React.createElement("select", { 
+                        className: "form-select", 
                         value: slot1Duration,
                         onChange: (e) => setSlot1Duration(Number(e.target.value))
                       },
@@ -1679,22 +1549,22 @@
 
                 // SLOT 2 Option Card
                 React.createElement("div", { className: "slot-option-container" },
-                  React.createElement("div", {
-                    className: "checkbox-row",
-                    onClick: () => setSlot2Active(!slot2Active)
+                  React.createElement("div", { 
+                    className: "checkbox-row", 
+                    onClick: () => setSlot2Active(!slot2Active) 
                   },
-                    React.createElement("input", {
-                      type: "checkbox",
+                    React.createElement("input", { 
+                      type: "checkbox", 
                       checked: slot2Active,
-                      onChange: () => { }
+                      onChange: () => {} 
                     }),
                     React.createElement("span", { className: "checkbox-label" }, "Slot 2 registrieren")
                   ),
                   slot2Active && React.createElement("div", { className: "slot-fields-grid" },
                     React.createElement("div", null,
                       React.createElement("label", { className: "form-label" }, "TAG"),
-                      React.createElement("select", {
-                        className: "form-select",
+                      React.createElement("select", { 
+                        className: "form-select", 
                         value: slot2Day,
                         onChange: (e) => setSlot2Day(e.target.value)
                       },
@@ -1705,8 +1575,8 @@
                     ),
                     React.createElement("div", null,
                       React.createElement("label", { className: "form-label" }, "STARTZEIT"),
-                      React.createElement("select", {
-                        className: "form-select",
+                      React.createElement("select", { 
+                        className: "form-select", 
                         value: slot2Start,
                         onChange: (e) => setSlot2Start(e.target.value)
                       },
@@ -1728,8 +1598,8 @@
                     ),
                     React.createElement("div", null,
                       React.createElement("label", { className: "form-label" }, "DAUER"),
-                      React.createElement("select", {
-                        className: "form-select",
+                      React.createElement("select", { 
+                        className: "form-select", 
                         value: slot2Duration,
                         onChange: (e) => setSlot2Duration(Number(e.target.value))
                       },
@@ -1742,21 +1612,21 @@
                 ),
 
                 React.createElement("div", { className: "modal-actions" },
-                  (openedSlotContext && !openedSlotContext.isGap) && React.createElement("button", {
-                    type: "button",
+                  (openedSlotContext && !openedSlotContext.isGap) && React.createElement("button", { 
+                    type: "button", 
                     className: "btn btn-delete",
                     onClick: () => {
                       setDeleteConfirmStep(1);
                       setDeleteConfirmPassword("");
                     }
                   }, "SLOT FREIGEBEN"),
-                  React.createElement("button", {
-                    type: "button",
+                  React.createElement("button", { 
+                    type: "button", 
                     className: "btn",
                     onClick: () => setIsModalOpen(false)
                   }, "ABBRECHEN"),
-                  React.createElement("button", {
-                    type: "submit",
+                  React.createElement("button", { 
+                    type: "submit", 
                     className: "btn btn-primary"
                   }, "SPEICHERN")
                 ),
@@ -1769,7 +1639,7 @@
                 (() => {
                   const slotPassword = openedSlotContext.password || "";
                   const hasPassword = slotPassword.length > 0;
-
+                  
                   if (!hasPassword) {
                     // No password was set – allow deletion freely
                     return React.createElement(React.Fragment, null,
@@ -1836,9 +1706,9 @@
             React.createElement("form", { onSubmit: handleSaveDbSettings },
               React.createElement("div", { className: "form-group" },
                 React.createElement("label", { className: "form-label" }, "SUPABASE URL"),
-                React.createElement("input", {
-                  type: "text",
-                  className: "form-input",
+                React.createElement("input", { 
+                  type: "text", 
+                  className: "form-input", 
                   placeholder: "https://xxxxxx.supabase.co",
                   value: dbUrl,
                   onChange: (e) => setDbUrl(e.target.value)
@@ -1846,9 +1716,9 @@
               ),
               React.createElement("div", { className: "form-group" },
                 React.createElement("label", { className: "form-label" }, "SUPABASE PUBLIC ANON KEY"),
-                React.createElement("input", {
-                  type: "text",
-                  className: "form-input",
+                React.createElement("input", { 
+                  type: "text", 
+                  className: "form-input", 
                   placeholder: "eyJhbGciOiJIUzI1NiIsIn...",
                   value: dbKey,
                   onChange: (e) => setDbKey(e.target.value)
@@ -1876,8 +1746,8 @@ CREATE POLICY "Public Insert" ON slots FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public Delete" ON slots FOR DELETE USING (true);`
               ),
               React.createElement("div", { className: "modal-actions" },
-                React.createElement("button", {
-                  type: "button",
+                React.createElement("button", { 
+                  type: "button", 
                   className: "btn",
                   onClick: () => {
                     setDbUrl("");
@@ -1888,13 +1758,13 @@ CREATE POLICY "Public Delete" ON slots FOR DELETE USING (true);`
                     fetchSlots();
                   }
                 }, "Trennen / Demo-Modus"),
-                React.createElement("button", {
-                  type: "button",
+                React.createElement("button", { 
+                  type: "button", 
                   className: "btn",
                   onClick: () => setIsDbModalOpen(false)
                 }, "ABBRECHEN"),
-                React.createElement("button", {
-                  type: "submit",
+                React.createElement("button", { 
+                  type: "submit", 
                   className: "btn btn-primary"
                 }, "VERBINDEN")
               )
@@ -1910,5 +1780,4 @@ CREATE POLICY "Public Delete" ON slots FOR DELETE USING (true);`
     root.render(React.createElement(App));
   </script>
 </body>
-
 </html>
