@@ -192,38 +192,21 @@
       justify-content: center;
       align-self: end;
       position: relative; /* Anker für die Funken-Ebene */
-      /* Alle Effekte (Glühen/Funken) unterhalb des Bildzuschnitts abschneiden.
-         Seiten & oben bleiben offen (negativ = nicht klippen); Unterkante exakt
-         an den Füßen der Fee (-5px gleicht das top:5px-Offset des Bildes aus). */
-      clip-path: inset(-200px -200px -5px -200px);
     }
 
     .hero-fairy img {
       height: 180px;
       width: auto;
       opacity: 0.85;
-      filter: drop-shadow(0 2px 8px rgba(224, 85, 47, 0.25));
       transition: opacity 0.3s ease;
       display: block;
       position: relative;
       top: 5px; /* fest nach unten gesetzt, bündig mit "LAND" – kein Schweben */
-      animation: fairyGlow 4s ease-in-out infinite;
       z-index: 1;
     }
 
     .hero-fairy img:hover {
       opacity: 1;
-    }
-
-    /* Pulsierendes magisches Leuchten (kein Bewegen der Fee selbst) */
-    @keyframes fairyGlow {
-      0%, 100% {
-        filter: drop-shadow(0 2px 8px rgba(224, 85, 47, 0.25));
-      }
-      50% {
-        filter: drop-shadow(0 0 16px rgba(224, 85, 47, 0.6))
-                drop-shadow(0 0 30px rgba(255, 168, 92, 0.35));
-      }
     }
 
     /* Funken-Ebene rund um die Fee */
@@ -275,9 +258,8 @@
       100% { opacity: 0; transform: translate(0, 0) scale(0); }
     }
 
-    /* Animationen bei reduzierter Bewegung deaktivieren */
+    /* Animationen bei reduzierter Bewegung deaktivieren (nur die Funken) */
     @media (prefers-reduced-motion: reduce) {
-      .hero-fairy img { animation: none; top: 5px; }
       .fairy-sparkles { display: none; }
     }
 
@@ -701,9 +683,13 @@
        Aufteilung über .print-continuous / .print-per-day.
        ==================================================================== */
     @media print {
+      /* Seitenrand = 0, damit der dunkle Hintergrund randlos die ganze Seite
+         füllt (weiße Papierränder lassen sich nicht einfärben). Der eigentliche
+         „Rand" wird als dunkles Padding im Wrapper / in den Tages-Containern
+         angelegt – siehe unten. */
       @page {
         size: A4 portrait;
-        margin: 10mm;
+        margin: 0;
       }
 
       body {
@@ -722,7 +708,11 @@
         background: #2a2622 !important;
         width: 100% !important;
         max-width: 100% !important;
-        padding: 0 !important;
+        /* Rundum-Rand in Hintergrundfarbe (ersetzt den weißen Seitenrand).
+           Seitliches Padding gilt auf JEDER Seite, oben/unten am Anfang/Ende
+           des Flusses; Folgeseiten erhalten ihren Abstand über die Tages-
+           Container weiter unten. */
+        padding: 14mm 14mm !important;
         margin: 0 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
@@ -742,13 +732,11 @@
       .meta-dates { font-size: 22px !important; }
       .meta-subtitle, .meta-info { font-size: 11px !important; }
 
-      /* Fee statisch (keine Animation/Funken), kleiner */
+      /* Fee statisch (Funken werden im Druck ausgeblendet), kleiner */
       .hero-fairy img {
         height: 118px !important;
-        animation: none !important;
         top: 0 !important;
         opacity: 1 !important;
-        filter: none !important;
       }
 
       /* Slots etwas kompakter, aber im Website-Raster */
@@ -767,16 +755,19 @@
         page-break-after: avoid; break-after: avoid;
       }
 
-      /* MODUS „Pro Tag": jeder Tag startet auf einer neuen Seite */
+      /* MODUS „Pro Tag": jeder Tag startet auf einer neuen Seite.
+         Da der @page-Rand 0 ist, sorgen padding-top/bottom hier für den
+         dunklen Rand oben/unten auf jeder Folgeseite. */
       .print-per-day .print-day-container {
         page-break-before: always;
         break-before: page;
-        padding-top: 4mm !important;
+        padding-top: 14mm !important;
+        padding-bottom: 14mm !important;
       }
       .print-per-day .print-day-container:first-of-type {
         page-break-before: avoid;
         break-before: avoid;
-        padding-top: 0 !important;
+        padding-top: 0 !important; /* Wrapper-Padding deckt die erste Seite oben ab */
       }
 
       /* MODUS „Durchlaufend": kein erzwungener Umbruch — zum Aneinanderkleben */
