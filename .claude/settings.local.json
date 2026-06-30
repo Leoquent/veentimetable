@@ -16,7 +16,9 @@
       "Bash(git add *)",
       "Bash(git -c user.name=Leoquent -c user.email=leonid.ryazanskiy@gmail.com commit -q -m 'Legenden-Zeile \\(ZEIT/GENRE\\) entfernt, Abstand zum ersten Tag angepasst *)",
       "Bash(git -c user.name=Leoquent -c user.email=leonid.ryazanskiy@gmail.com commit -q -m 'Fee-Glow entfernt \\(nur Funken bleiben\\); clip-path entfernt; Druckraender in BG-Farbe *)",
-      "Bash(git -c user.name=Leoquent -c user.email=leonid.ryazanskiy@gmail.com commit -q -m 'Standard-Kalenderzeit \\(Tag ab 00:00, Gruppierung nach Starttag\\); Footer-Stempel entfernt *)"
+      "Bash(git -c user.name=Leoquent -c user.email=leonid.ryazanskiy@gmail.com commit -q -m 'Standard-Kalenderzeit \\(Tag ab 00:00, Gruppierung nach Starttag\\); Footer-Stempel entfernt *)",
+      "Bash(file fairy_orange.png)",
+      "Bash(node -e \"const fs=require\\('fs'\\);const b=fs.readFileSync\\('fairy_orange.png'\\);const w=b.readUInt32BE\\(16\\),h=b.readUInt32BE\\(20\\);console.log\\('fairy_orange.png:',w+'x'+h,'ratio\\(w/h\\)=',\\(w/h\\).toFixed\\(3\\)\\);\")"
     ]
   }
 }
