@@ -650,9 +650,19 @@
       .timetable-wrapper {
         padding: 22px 16px 18px;
       }
-      /* Steuerleiste darf umbrechen, falls beide Gruppen nicht nebeneinander passen */
+      /* Auf Mobile nur der „SLOT SICHERN"-Button (volle Breite) – Druck-/Seiten-Steuerung ausblenden */
+      .top-bar-right {
+        display: none;
+      }
       .top-bar-controls {
         flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .top-bar-controls .btn-primary {
+        flex: 1;
+        justify-content: center;
+        padding: 13px 16px;
+        font-size: 12px;
       }
       /* Kopfzeile gestapelt, damit „TIMETABLE" und Untertitel sauber je auf einer Zeile sitzen */
       .timetable-header {
@@ -686,17 +696,47 @@
         height: clamp(123px, 44.2vw, 200px);
         top: 0;
       }
+      /* Meta neu geordnet: Beschreibung + Ort direkt unter VEENLAND,
+         darunter ein Trenner, dann Datum + Eckdaten als 2er-Kachel. */
       .hero-meta {
         grid-column: 1 / -1;
+        display: flex;
+        flex-direction: column;
         padding-left: 0;
         padding-bottom: 0;
         border-left: none;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        padding-top: 20px;
-        margin-top: 8px;
+        border-top: none;
+        padding-top: 0;
+        margin-top: 0;
+      }
+      .meta-info {
+        order: 1;
+        margin-top: 0;
+      }
+      .meta-location {
+        order: 2;
+      }
+      .meta-divider {
+        order: 3;
+        margin: 16px 0;
+      }
+      /* Datum (links) und „FREITAG → SONNTAG / 3 TAGE / 2 NÄCHTE" (rechts) als 2er-Kachel */
+      .meta-when {
+        order: 4;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .meta-when .meta-dates {
+        flex: 0 0 auto;
+      }
+      .meta-when .meta-subtitle {
+        margin-top: 0;
+        padding-left: 14px;
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
       }
       .meta-dates {
-        font-size: 28px;
+        font-size: 26px;
       }
       .day-name {
         font-size: 28px;
@@ -747,7 +787,17 @@
         height: clamp(100px, 38.4vw, 146px);
       }
       .meta-dates {
-        font-size: 26px;
+        font-size: 24px;
+      }
+      /* Zu schmal für 2 Spalten – Datum und Eckdaten untereinander */
+      .meta-when {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      .meta-when .meta-subtitle {
+        padding-left: 0;
+        border-left: none;
       }
       .slot-row {
         grid-template-columns: 72px minmax(0, 1fr);
@@ -1488,8 +1538,7 @@
         React.createElement("div", { className: "timetable-wrapper" },
           // Header Bar
           React.createElement("div", { className: "timetable-header" },
-            React.createElement("span", null, "T I M E T A B L E"),
-            React.createElement("span", { style: { color: "var(--muted)" } }, "das privateste Festival NRWs")
+            React.createElement("span", null, "T I M E T A B L E")
           ),
           
           // Hero Title & Metadata
@@ -1509,11 +1558,13 @@
               )
             ),
             React.createElement("div", { className: "hero-meta" },
-              React.createElement("div", { className: "meta-dates" }, "24.–26.", React.createElement("br"), "Juli 2026"),
-              React.createElement("div", { className: "meta-subtitle" }, "FREITAG → SONNTAG", React.createElement("br"), "3 TAGE / 2 NÄCHTE"),
+              React.createElement("div", { className: "meta-when" },
+                React.createElement("div", { className: "meta-dates" }, "24.–26.", React.createElement("br"), "Juli 2026"),
+                React.createElement("div", { className: "meta-subtitle" }, "FREITAG → SONNTAG", React.createElement("br"), "3 TAGE / 2 NÄCHTE")
+              ),
               React.createElement("div", { className: "meta-divider" }),
-              React.createElement("div", { className: "meta-info" }, "Ein Magisches Wochenende für Freunde & Freundesfreunde."),
-              React.createElement("a", { 
+              React.createElement("div", { className: "meta-info" }, "Ein Magisches Wochenende", React.createElement("br"), "für Freunde & Freundesfreunde."),
+              React.createElement("a", {
                 className: "meta-location", 
                 href: "https://maps.google.com/?q=Veen,+Alpen,+Deutschland", 
                 target: "_blank", 
