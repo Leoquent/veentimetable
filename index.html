@@ -811,69 +811,51 @@
            Seitliches Padding gilt auf JEDER Seite, oben/unten am Anfang/Ende
            des Flusses; Folgeseiten erhalten ihren Abstand über die Tages-
            Container weiter unten. */
-        padding: 14mm 14mm !important;
+        padding: 6mm 6mm !important;
         margin: 0 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
 
-      /* Header wie auf der Website (3 Spalten) – nur kleiner, damit er auf A4 passt */
+      /* Header möglichst wie auf der Website – große VEENLAND-Type + Fee.
+         Spaltenbreiten so gewählt, dass „LAND" bei A4-Breite (~688px) sicher
+         in die 1fr-Spalte passt. */
       .hero-section {
         display: grid !important;
-        grid-template-columns: 1fr auto 210px !important;
-        gap: 16px !important;
+        grid-template-columns: min-content auto 140px !important;
+        gap: 20px !important;
         align-items: end !important;
-        padding-bottom: 20px !important;
+        padding-bottom: 35px !important;
         page-break-inside: avoid;
         break-inside: avoid;
       }
+      .hero-title { font-size: 150px !important; line-height: 0.82 !important; letter-spacing: -0.01em !important; }
+      .meta-dates { font-size: 26px !important; }
+      .meta-subtitle, .meta-info { font-size: 11px !important; }
 
-      .hero-title {
-        font-size: 90px !important;
-        line-height: 0.82 !important;
-      }
-
-      .meta-dates {
-        font-size: 22px !important;
-      }
-
-      .meta-subtitle,
-      .meta-info {
-        font-size: 11px !important;
-      }
-
-      /* Fee statisch (Funken werden im Druck ausgeblendet), kleiner */
+      /* Fee statisch (Funken im Druck aus), groß wie auf der Website */
       .hero-fairy img {
-        height: 118px !important;
+        height: 170px !important;
         top: 0 !important;
         opacity: 1 !important;
       }
 
-      /* Slots etwas kompakter, aber im Website-Raster */
+      /* Slots im Website-Raster, großzügig (füllt den Negativraum) */
       .slot-row {
-        grid-template-columns: 140px 1fr !important;
-        gap: 18px !important;
+        grid-template-columns: 160px 1fr !important;
+        gap: 22px !important;
+        padding: 18px 0 !important;
         page-break-inside: avoid;
         break-inside: avoid;
       }
-
-      .slot-time-large {
-        font-size: 58px !important;
-      }
-
-      .slot-title {
-        font-size: 24px !important;
-      }
-
-      .day-name {
-        font-size: 28px !important;
-      }
+      .slot-time-large { font-size: 72px !important; }
+      .slot-title { font-size: 30px !important; }
+      .slot-genre { font-size: 13px !important; }
+      .day-name { font-size: 32px !important; }
 
       .day-header {
-        page-break-inside: avoid;
-        break-inside: avoid;
-        page-break-after: avoid;
-        break-after: avoid;
+        page-break-inside: avoid; break-inside: avoid;
+        page-break-after: avoid; break-after: avoid;
       }
 
       /* MODUS „Pro Tag": jeder Tag startet auf einer neuen Seite.
@@ -885,12 +867,11 @@
         padding-top: 14mm !important;
         padding-bottom: 14mm !important;
       }
-
-      .print-per-day .print-day-container:first-of-type {
-        page-break-before: avoid;
-        break-before: avoid;
-        padding-top: 0 !important;
-        /* Wrapper-Padding deckt die erste Seite oben ab */
+      /* Freitag (der erste Container nach hero) darf NICHT auf eine neue Seite umbrechen! */
+      .print-per-day .hero-section + .print-day-container {
+        page-break-before: avoid !important;
+        break-before: avoid !important;
+        padding-top: 0 !important; /* Wrapper-Padding deckt die erste Seite oben ab */
       }
 
       /* MODUS „Durchlaufend": kein erzwungener Umbruch — zum Aneinanderkleben */
