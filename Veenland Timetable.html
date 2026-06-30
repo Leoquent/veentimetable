@@ -684,9 +684,9 @@
         margin-bottom: 18px;
       }
       /* Hero-Reihenfolge auf Mobile:
-         1) Datum-Kicker (über VEENLAND, direkt unter der Kopflinie)
+         1) Datum-Kicker (einzeilig, über VEENLAND, direkt unter der Kopflinie)
          2) VEENLAND  |  Fee   (2er-Kachel, Fee so hoch wie der VEENLAND-Block)
-         3) Beschreibung + Ort (direkt unter VEENLAND)
+         3) Beschreibung (direkt unter VEENLAND)
          Gleichmäßige Abstände ober- und unterhalb des Titels über row-gap. */
       .hero-section {
         grid-template-columns: 1fr 1fr;
@@ -695,22 +695,14 @@
         align-items: end;
         padding-bottom: 28px;
       }
-      /* Kicker: Datum (links) und Eckdaten (rechts) als kompakte 2er-Kachel */
+      /* Kicker: nur das Festival-Datum, in einer Zeile (überschreibt display:none der Basis) */
       .hero-kicker {
+        display: block;
         grid-column: 1 / -1;
-        display: flex;
-        align-items: center;
-        gap: 14px;
       }
       .hero-kicker .meta-dates {
-        flex: 0 0 auto;
         font-size: 24px;
-      }
-      .hero-kicker .meta-subtitle {
-        margin-top: 0;
-        font-size: 11px;
-        padding-left: 14px;
-        border-left: 1px solid rgba(255, 255, 255, 0.1);
+        white-space: nowrap;
       }
       /* erlaubt „VEENLAND", über die Kachelkante nach rechts hinauszulaufen */
       .hero-titles {
@@ -793,16 +785,6 @@
       }
       .hero-kicker .meta-dates {
         font-size: 22px;
-      }
-      /* Zu schmal für 2 Spalten – Datum und Eckdaten im Kicker untereinander */
-      .hero-kicker {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-      }
-      .hero-kicker .meta-subtitle {
-        padding-left: 0;
-        border-left: none;
       }
       .slot-row {
         grid-template-columns: 72px minmax(0, 1fr);
@@ -1548,10 +1530,9 @@
           
           // Hero Title & Metadata
           React.createElement("div", { className: "hero-section" },
-            // Datum-Kicker über VEENLAND (nur Mobile; auf Desktop via CSS ausgeblendet)
+            // Datum-Kicker über VEENLAND (nur Mobile; auf Desktop via CSS ausgeblendet) – einzeilig
             React.createElement("div", { className: "hero-kicker" },
-              React.createElement("div", { className: "meta-dates" }, "24.–26.", React.createElement("br"), "Juli 2026"),
-              React.createElement("div", { className: "meta-subtitle" }, "FREITAG → SONNTAG", React.createElement("br"), "3 TAGE / 2 NÄCHTE")
+              React.createElement("div", { className: "meta-dates" }, "24.–26. Juli 2026")
             ),
             React.createElement("div", { className: "hero-titles" },
               React.createElement("div", { className: "hero-title" }, "VEEN"),
@@ -1573,13 +1554,7 @@
                 React.createElement("div", { className: "meta-subtitle" }, "FREITAG → SONNTAG", React.createElement("br"), "3 TAGE / 2 NÄCHTE")
               ),
               React.createElement("div", { className: "meta-divider" }),
-              React.createElement("div", { className: "meta-info" }, "Ein Magisches Wochenende", React.createElement("br"), "für Freunde & Freundesfreunde."),
-              React.createElement("a", {
-                className: "meta-location", 
-                href: "https://maps.google.com/?q=Veen,+Alpen,+Deutschland", 
-                target: "_blank", 
-                rel: "noopener noreferrer" 
-              }, "Veen (Alpen), NRW, Deutschland")
+              React.createElement("div", { className: "meta-info" }, "Ein Magisches Wochenende", React.createElement("br"), "für Freunde & Freundesfreunde.")
             )
           ),
 
