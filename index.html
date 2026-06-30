@@ -797,10 +797,17 @@
       .hero-kicker {
         display: block;
         grid-column: 1 / -1;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding-bottom: 8px;
+        margin-bottom: 4px;
       }
 
       .hero-kicker .meta-dates {
-        font-size: 24px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 400;
+        color: var(--muted);
+        letter-spacing: 0.16em;
         white-space: nowrap;
       }
 
@@ -835,9 +842,10 @@
         margin-top: 0;
       }
 
-      /* Datum-Duplikat in der Meta-Spalte und der Trenner sind auf Mobile aus */
+      /* Datum-Duplikat in der Meta-Spalte, Trenner und die Tages-Daten sind auf Mobile aus */
       .meta-when,
-      .meta-divider {
+      .meta-divider,
+      .day-date {
         display: none;
       }
 
@@ -897,10 +905,6 @@
       /* Fee-Höhe an den kleineren Titel angepasst (≈ 1,92 × Schriftgröße) */
       .hero-fairy img {
         height: clamp(100px, 38.4vw, 146px);
-      }
-
-      .hero-kicker .meta-dates {
-        font-size: 22px;
       }
 
       .slot-row {
@@ -1061,12 +1065,14 @@
     const HOURS_24 = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
 
     // Format genre string: normalize separators (commas, semicolons) to middle dots (·)
+    // and use non-breaking space (\u00a0) before the dot to prevent wrapping
     function formatGenre(genreStr) {
       if (!genreStr) return "";
-      // If already contains ·, return as is
-      if (genreStr.includes("·")) return genreStr;
-      // Split by comma, semicolon, or slash and rejoin with ·
-      return genreStr.split(/[,;/]+/).map(s => s.trim()).filter(s => s.length > 0).join(" · ");
+      return genreStr
+        .split(/[,;/·\u00a0]+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 0)
+        .join("\u00a0· ");
     }
 
     // Helpers to translate day/time to hours and back
