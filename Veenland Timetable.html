@@ -663,18 +663,27 @@
         letter-spacing: 0.14em;
         margin-bottom: 22px;
       }
-      /* Hero: Titel und Fee in EINER Reihe (unten bündig), Meta-Block darunter über volle Breite */
+      /* Hero als 2er-Kachel: VEENLAND links, Fee rechts und mittig in ihrer Kachel.
+         Die Fee ist so hoch wie der gestapelte VEENLAND-Block – die orange Silhouette
+         füllt 85,4% des Bildes, der Block ist 1,64 × Schriftgröße hoch, also
+         Bildhöhe ≈ 1,92 × Schriftgröße. Meta-Block darunter über volle Breite. */
       .hero-section {
-        grid-template-columns: 1fr auto;
-        gap: 14px;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 8px;
+        row-gap: 16px;
         align-items: end;
         padding-bottom: 26px;
+      }
+      /* erlaubt „VEENLAND", über die Kachelkante nach rechts hinauszulaufen */
+      .hero-section > div:first-child {
+        min-width: 0;
       }
       .hero-title {
         font-size: clamp(64px, 23vw, 104px);
       }
+      /* Fee mittig in ihrer Kachel, unten bündig mit VEENLAND */
       .hero-fairy img {
-        height: 148px;
+        height: clamp(123px, 44.2vw, 200px);
         top: 0;
       }
       .hero-meta {
@@ -733,8 +742,9 @@
       .hero-title {
         font-size: clamp(52px, 20vw, 76px);
       }
+      /* Fee-Höhe an den kleineren Titel angepasst (≈ 1,92 × Schriftgröße) */
       .hero-fairy img {
-        height: 128px;
+        height: clamp(100px, 38.4vw, 146px);
       }
       .meta-dates {
         font-size: 26px;
