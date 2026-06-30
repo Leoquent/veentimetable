@@ -60,7 +60,8 @@
       position: relative;
     }
 
-    /* Top Bar Utility Buttons – bündig (gleiche Breite + zentriert) wie das Timetable darunter */
+    /* Top Bar Utility Buttons – bündig (gleiche Breite + zentriert) wie das Timetable darunter.
+       Bleibt beim Scrollen oben kleben (Mobile + Browser). */
     .top-bar-controls {
       display: flex;
       justify-content: space-between;
@@ -70,6 +71,12 @@
       /* auto = exakt über dem Timetable ausgerichtet */
       width: 100%;
       max-width: 880px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #131110;
+      padding: 12px 0;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
     }
 
     /* Rechte Gruppe: Modus-Umschalter + Drucken gehören zusammen
@@ -198,6 +205,12 @@
       gap: 28px;
       align-items: end;
       padding-bottom: 35px;
+    }
+
+    /* Datum-„Kicker" über VEENLAND – nur auf Mobile sichtbar (siehe Media Query).
+       Auf Desktop steht das Datum weiterhin in der Meta-Spalte rechts. */
+    .hero-kicker {
+      display: none;
     }
 
     .hero-fairy {
@@ -760,30 +773,48 @@
         font-size: 12px;
       }
 
-      /* Kopfzeile gestapelt, damit „TIMETABLE" und Untertitel sauber je auf einer Zeile sitzen */
+      /* Kopfzeile (nur noch „TIMETABLE") – kompakter, Kicker rückt näher an die Linie */
       .timetable-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
         font-size: 11px;
         letter-spacing: 0.14em;
-        margin-bottom: 22px;
+        margin-bottom: 18px;
       }
 
-      /* Hero als 2er-Kachel: VEENLAND links, Fee rechts und mittig in ihrer Kachel.
-         Die Fee ist so hoch wie der gestapelte VEENLAND-Block – die orange Silhouette
-         füllt 85,4% des Bildes, der Block ist 1,64 × Schriftgröße hoch, also
-         Bildhöhe ≈ 1,92 × Schriftgröße. Meta-Block darunter über volle Breite. */
+      /* Hero-Reihenfolge auf Mobile:
+         1) Datum-Kicker (über VEENLAND, direkt unter der Kopflinie)
+         2) VEENLAND  |  Fee   (2er-Kachel, Fee so hoch wie der VEENLAND-Block)
+         3) Beschreibung + Ort (direkt unter VEENLAND)
+         Gleichmäßige Abstände ober- und unterhalb des Titels über row-gap. */
       .hero-section {
         grid-template-columns: 1fr 1fr;
         column-gap: 8px;
-        row-gap: 16px;
+        row-gap: 18px;
         align-items: end;
-        padding-bottom: 26px;
+        padding-bottom: 28px;
+      }
+
+      /* Kicker: Datum (links) und Eckdaten (rechts) als kompakte 2er-Kachel */
+      .hero-kicker {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .hero-kicker .meta-dates {
+        flex: 0 0 auto;
+        font-size: 24px;
+      }
+
+      .hero-kicker .meta-subtitle {
+        margin-top: 0;
+        font-size: 11px;
+        padding-left: 14px;
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       /* erlaubt „VEENLAND", über die Kachelkante nach rechts hinauszulaufen */
-      .hero-section > div:first-child {
+      .hero-titles {
         min-width: 0;
       }
 
@@ -797,12 +828,10 @@
         top: 0;
       }
 
-      /* Meta neu geordnet: Beschreibung + Ort direkt unter VEENLAND,
-         darunter ein Trenner, dann Datum + Eckdaten als 2er-Kachel. */
+      /* Unter VEENLAND nur noch Beschreibung + Ort; das Datum sitzt jetzt im Kicker oben */
       .hero-meta {
         grid-column: 1 / -1;
-        display: flex;
-        flex-direction: column;
+        display: block;
         padding-left: 0;
         padding-bottom: 0;
         border-left: none;
@@ -812,39 +841,13 @@
       }
 
       .meta-info {
-        order: 1;
         margin-top: 0;
       }
 
-      .meta-location {
-        order: 2;
-      }
-
+      /* Datum-Duplikat in der Meta-Spalte und der Trenner sind auf Mobile aus */
+      .meta-when,
       .meta-divider {
-        order: 3;
-        margin: 16px 0;
-      }
-
-      /* Datum (links) und „FREITAG → SONNTAG / 3 TAGE / 2 NÄCHTE" (rechts) als 2er-Kachel */
-      .meta-when {
-        order: 4;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-      }
-
-      .meta-when .meta-dates {
-        flex: 0 0 auto;
-      }
-
-      .meta-when .meta-subtitle {
-        margin-top: 0;
-        padding-left: 14px;
-        border-left: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .meta-dates {
-        font-size: 26px;
+        display: none;
       }
 
       .day-name {
@@ -905,18 +908,18 @@
         height: clamp(100px, 38.4vw, 146px);
       }
 
-      .meta-dates {
-        font-size: 24px;
+      .hero-kicker .meta-dates {
+        font-size: 22px;
       }
 
-      /* Zu schmal für 2 Spalten – Datum und Eckdaten untereinander */
-      .meta-when {
+      /* Zu schmal für 2 Spalten – Datum und Eckdaten im Kicker untereinander */
+      .hero-kicker {
         flex-direction: column;
         align-items: flex-start;
-        gap: 6px;
+        gap: 5px;
       }
 
-      .meta-when .meta-subtitle {
+      .hero-kicker .meta-subtitle {
         padding-left: 0;
         border-left: none;
       }
@@ -1668,7 +1671,12 @@
 
           // Hero Title & Metadata
           React.createElement("div", { className: "hero-section" },
-            React.createElement("div", null,
+            // Datum-Kicker über VEENLAND (nur Mobile; auf Desktop via CSS ausgeblendet)
+            React.createElement("div", { className: "hero-kicker" },
+              React.createElement("div", { className: "meta-dates" }, "24.–26.", React.createElement("br"), "JULI 2026"),
+              React.createElement("div", { className: "meta-subtitle" }, "FREITAG → SONNTAG", React.createElement("br"), "3 TAGE / 2 NÄCHTE")
+            ),
+            React.createElement("div", { className: "hero-titles" },
               React.createElement("div", { className: "hero-title" }, "VEEN"),
               React.createElement("div", { className: "hero-title", style: { WebkitTextStroke: "0px" } }, "LAND")
             ),
