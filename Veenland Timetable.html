@@ -392,6 +392,19 @@
       cursor: not-allowed;
     }
 
+    .slot-row.empty-slot {
+      opacity: 0.65;
+    }
+
+    .slot-row.empty-slot:hover {
+      opacity: 1;
+      background-color: rgba(224, 85, 47, 0.08);
+    }
+
+    .slot-title.empty-title {
+      min-height: 34px;
+    }
+
     .slot-time-large {
       font-family: var(--font-archivo);
       font-weight: 800;
@@ -887,6 +900,8 @@
       .slot-time-large { font-size: 72px !important; }
       .slot-title { font-size: 30px !important; }
       .slot-genre { font-size: 13px !important; }
+      .slot-row.empty-slot { opacity: 1 !important; }
+      .slot-title.empty-title { min-height: 38px !important; }
       .day-name { font-size: 32px !important; }
 
       .day-header {
@@ -960,8 +975,8 @@
     // Helpers to translate day/time to hours and back
     // Wandelt (Tag, "HH:MM") in Festival-Stunden seit Freitag 18:00 um.
     // Ganz normale Kalenderzeit: jeder Tag beginnt um 00:00, der Tag der Auswahl
-    // bestimmt das Datum. Festivalzeitraum: Freitag 18:00 .. Sonntag 14:00.
-    //   Freitag = Fr 00:00.. (gültig ab 18:00)   -> abs = h
+    // bestimmt das Datum. Festivalzeitraum: Freitag 14:00 .. Sonntag 14:00.
+    //   Freitag = Fr 00:00.. (gültig ab 14:00)   -> abs = h
     //   Samstag = Sa 00:00..24:00                -> abs = 24 + h
     //   Sonntag = So 00:00..14:00                -> abs = 48 + h
     function timeToHours(day, timeStr) {
@@ -974,7 +989,7 @@
       } else { // Freitag
         abs = h;
       }
-      return abs + m / 60 - 18.0; // Freitag 18:00 = Stunde 0
+      return abs + m / 60 - 18.0; // Freitag 18:00 = Stunde 0 (Freitag 14:00 = Stunde -4.0)
     }
 
     function hoursToTime(hours) {
@@ -1001,6 +1016,52 @@
       };
     }
 
+    // Generator für Tages-Timelines inklusive dynamischer freier Slots
+    function generateDayTimeline(bookedSlots, intervals) {
+      const finalTimeline = [];
+
+      intervals.forEach(([winStart, winEnd]) => {
+        const inWin = bookedSlots
+          .filter(s => s.startHours < winEnd && s.endHours > winStart)
+          .sort((a, b) => a.startHours - b.startHours);
+
+        let current = winStart;
+
+        inWin.forEach(slot => {
+          if (slot.startHours > current) {
+            chunkGap(current, slot.startHours, finalTimeline);
+          }
+          finalTimeline.push(slot);
+          current = Math.max(current, slot.endHours);
+        });
+
+        if (current < winEnd) {
+          chunkGap(current, winEnd, finalTimeline);
+        }
+      });
+
+      return finalTimeline;
+    }
+
+    function chunkGap(gapStart, gapEnd, timeline) {
+      let curr = gapStart;
+      while (curr < gapEnd - 0.01) {
+        const remaining = gapEnd - curr;
+        let duration = 2.0;
+        if (remaining < 2.0 - 0.01) {
+          duration = remaining;
+        }
+        const end = curr + duration;
+        timeline.push({
+          isGap: true,
+          startHours: curr,
+          endHours: end,
+          duration: duration
+        });
+        curr = end;
+      }
+    }
+
     const React = window.React;
     const ReactDOM = window.ReactDOM;
 
@@ -1023,13 +1084,13 @@
       // Slot 1
       const [slot1Active, setSlot1Active] = React.useState(true);
       const [slot1Day, setSlot1Day] = React.useState("Freitag");
-      const [slot1Start, setSlot1Start] = React.useState("18:00");
+      const [slot1Start, setSlot1Start] = React.useState("14:00");
       const [slot1Duration, setSlot1Duration] = React.useState(2.0);
 
       // Slot 2
       const [slot2Active, setSlot2Active] = React.useState(false);
       const [slot2Day, setSlot2Day] = React.useState("Freitag");
-      const [slot2Start, setSlot2Start] = React.useState("18:00");
+      const [slot2Start, setSlot2Start] = React.useState("14:00");
       const [slot2Duration, setSlot2Duration] = React.useState(2.0);
       
       const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -1206,8 +1267,8 @@
         for (let i = 0; i < pSlots.length; i++) {
           const s = pSlots[i];
           
-          if (s.start < 0.0 || s.end > 44.0) {
-            alert(`Der Slot liegt außerhalb der Festivalzeit (Freitag 18:00 – Sonntag 14:00)!`);
+          if (s.start < -4.0 || s.end > 44.0) {
+            alert(`Der Slot liegt außerhalb der Festivalzeit (Freitag 14:00 – Sonntag 14:00)!`);
             return false;
           }
 
@@ -1420,30 +1481,41 @@
         return list;
       }, [slotsData]);
 
-      // Calculate days timeline segments dynamically (SHOW ONLY REGISTERED SLOTS, NO GAPS)
-      // Gruppierung nach Kalendertag (Startzeit entscheidet):
-      //   Freitag = Stunde 0..6   (Fr 18:00..24:00)
-      //   Samstag = Stunde 6..30  (Sa 00:00..24:00)
+      // Calculate days timeline segments dynamically with empty slots
+      //   Freitag = Stunde -4..6 (Fr 14:00..24:00)
+      //   Samstag = Stunde 6..10 (Sa 00:00..04:00) & Stunde 22..30 (Sa 16:00..24:00) [04:00-16:00 ist Schlafpause]
       //   Sonntag = Stunde 30..44 (So 00:00..14:00)
       const timelineFriday = React.useMemo(() => {
-        return allMergedSlots
-          .filter(s => s.startHours >= 0.0 && s.startHours < 6.0)
-          .sort((a, b) => a.startHours - b.startHours);
+        return generateDayTimeline(allMergedSlots, [[-4.0, 6.0]]);
       }, [allMergedSlots]);
 
       const timelineSaturday = React.useMemo(() => {
-        return allMergedSlots
-          .filter(s => s.startHours >= 6.0 && s.startHours < 30.0)
-          .sort((a, b) => a.startHours - b.startHours);
+        return generateDayTimeline(allMergedSlots, [[6.0, 10.0], [22.0, 30.0]]);
       }, [allMergedSlots]);
 
       const timelineSunday = React.useMemo(() => {
-        return allMergedSlots
-          .filter(s => s.startHours >= 30.0 && s.startHours < 44.0)
-          .sort((a, b) => a.startHours - b.startHours);
+        return generateDayTimeline(allMergedSlots, [[30.0, 44.0]]);
       }, [allMergedSlots]);
 
+      // Handler when clicking on an empty/gap slot
+      const handleEmptySlotClick = (slot) => {
+        const startDetails = hoursToTime(slot.startHours);
+        setOpenedSlotContext(null);
+        setDeleteConfirmStep(0);
+        setDeleteConfirmPassword("");
 
+        setDjName(localStorage.getItem("veenland_last_dj_name") || "");
+        setGenre("");
+        setPassword("");
+
+        setSlot1Active(true);
+        setSlot1Day(startDetails.day);
+        setSlot1Start(startDetails.timeStr);
+        setSlot1Duration(slot.duration >= 2.0 ? 2.0 : 1.0);
+
+        setSlot2Active(false);
+        setIsModalOpen(true);
+      };
 
       // Render Day Layout List
       const renderDayTimeline = (dayName, timeline) => {
@@ -1453,27 +1525,47 @@
             React.createElement("div", { className: "day-name" }, dayName.toUpperCase()),
             React.createElement("div", { className: "day-date" }, DATES[dayName])
           ),
-          
-          // List slots (No gaps rendered here!)
+
           timeline.length === 0 ? (
-            React.createElement("div", { 
-              style: { 
-                padding: "20px 0", 
-                fontFamily: "var(--font-mono)", 
-                fontSize: "12px", 
-                color: "var(--muted)", 
-                opacity: 0.5, 
-                fontStyle: "italic" 
-              } 
-            }, "Noch keine DJs eingetragen...")
+            React.createElement("div", {
+              style: {
+                padding: "20px 0",
+                fontFamily: "var(--font-mono)",
+                fontSize: "12px",
+                color: "var(--muted)",
+                opacity: 0.5,
+                fontStyle: "italic"
+              }
+            }, "Keine Programme für diesen Zeitraum...")
           ) : (
             timeline.map((slot, idx) => {
-              const isLocked = slot.isLocked;
               const startDetails = hoursToTime(slot.startHours);
               const endDetails = hoursToTime(slot.endHours);
               const displayHourLarge = startDetails.timeStr.split(":")[0];
-              
-              return React.createElement("div", { 
+
+              if (slot.isGap) {
+                return React.createElement("div", {
+                  key: `gap_${dayName}_${idx}_${slot.startHours}`,
+                  className: "slot-row empty-slot interactive",
+                  onClick: () => handleEmptySlotClick(slot),
+                  title: "Klicken, um diesen Slot zu buchen"
+                },
+                  React.createElement("div", { className: "slot-time-large" }, displayHourLarge),
+                  React.createElement("div", { className: "slot-content" },
+                    React.createElement("div", { className: "slot-title-row" },
+                      React.createElement("div", { className: "slot-title empty-title" }, ""),
+                      React.createElement("div", { className: "slot-time-range" },
+                        `${startDetails.timeStr} – ${endDetails.timeStr}`
+                      )
+                    ),
+                    React.createElement("div", { className: "slot-genre" }, "")
+                  )
+                );
+              }
+
+              const isLocked = slot.isLocked;
+
+              return React.createElement("div", {
                 key: idx,
                 className: `slot-row ${isLocked ? 'locked' : 'interactive'}`.trim(),
                 onClick: () => handleSlotClick(slot)
@@ -1484,7 +1576,7 @@
                 React.createElement("div", { className: "slot-content" },
                   React.createElement("div", { className: "slot-title-row" },
                     React.createElement("div", { className: "slot-title" }, slot.djName),
-                    React.createElement("div", { className: "slot-time-range" }, 
+                    React.createElement("div", { className: "slot-time-range" },
                       `${startDetails.timeStr} – ${endDetails.timeStr}`
                     )
                   ),
@@ -1507,7 +1599,7 @@
               setPassword("");
               setSlot1Active(true);
               setSlot1Day("Freitag");
-              setSlot1Start("18:00");
+              setSlot1Start("14:00");
               setSlot1Duration(2.0);
               setSlot2Active(false);
               setOpenedSlotContext(null);
@@ -1668,8 +1760,14 @@
                         HOURS_24.map(time => {
                           const h = timeToHours(slot1Day, time);
                           const end = h + Number(slot1Duration);
-                          // Innerhalb der Festivalzeit (Fr 18:00–So 14:00) UND passt der Tag zur Auswahl?
-                          const available = h >= 0 && end <= 44 && hoursToTime(h).day === slot1Day;
+                          let available = false;
+                          if (slot1Day === "Freitag") {
+                            available = h >= -4.0 && end <= 6.0 && hoursToTime(h).day === "Freitag";
+                          } else if (slot1Day === "Samstag") {
+                            available = ((h >= 6.0 && end <= 10.0) || (h >= 22.0 && end <= 30.0)) && hoursToTime(h).day === "Samstag";
+                          } else if (slot1Day === "Sonntag") {
+                            available = h >= 30.0 && end <= 44.0 && hoursToTime(h).day === "Sonntag";
+                          }
                           const isOccupied = available && allMergedSlots.some(s => {
                             if (s.djName && s.djName.toUpperCase() === djName.trim().toUpperCase()) return false;
                             return h < s.endHours && end > s.startHours;
@@ -1732,8 +1830,14 @@
                         HOURS_24.map(time => {
                           const h = timeToHours(slot2Day, time);
                           const end = h + Number(slot2Duration);
-                          // Innerhalb der Festivalzeit (Fr 18:00–So 14:00) UND passt der Tag zur Auswahl?
-                          const available = h >= 0 && end <= 44 && hoursToTime(h).day === slot2Day;
+                          let available = false;
+                          if (slot2Day === "Freitag") {
+                            available = h >= -4.0 && end <= 6.0 && hoursToTime(h).day === "Freitag";
+                          } else if (slot2Day === "Samstag") {
+                            available = ((h >= 6.0 && end <= 10.0) || (h >= 22.0 && end <= 30.0)) && hoursToTime(h).day === "Samstag";
+                          } else if (slot2Day === "Sonntag") {
+                            available = h >= 30.0 && end <= 44.0 && hoursToTime(h).day === "Sonntag";
+                          }
                           const isOccupied = available && allMergedSlots.some(s => {
                             if (s.djName && s.djName.toUpperCase() === djName.trim().toUpperCase()) return false;
                             return h < s.endHours && end > s.startHours;
