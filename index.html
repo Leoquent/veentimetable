@@ -1601,14 +1601,14 @@
 
       // Calculate days timeline segments dynamically with empty slots
       //   Freitag = Stunde -4..6 (Fr 14:00..24:00)
-      //   Samstag = Stunde 6..10 (Sa 00:00..04:00) & Stunde 22..30 (Sa 16:00..24:00) [04:00-16:00 ist Schlafpause]
+      //   Samstag = Stunde 6..30 (Sa 00:00..24:00 durchgehend)
       //   Sonntag = Stunde 30..44 (So 00:00..14:00)
       const timelineFriday = React.useMemo(() => {
         return generateDayTimeline(allMergedSlots, [[-4.0, 6.0]]);
       }, [allMergedSlots]);
 
       const timelineSaturday = React.useMemo(() => {
-        return generateDayTimeline(allMergedSlots, [[6.0, 10.0], [22.0, 30.0]]);
+        return generateDayTimeline(allMergedSlots, [[6.0, 30.0]]);
       }, [allMergedSlots]);
 
       const timelineSunday = React.useMemo(() => {
@@ -1882,7 +1882,7 @@
                           if (slot1Day === "Freitag") {
                             available = h >= -4.0 && end <= 6.0 && hoursToTime(h).day === "Freitag";
                           } else if (slot1Day === "Samstag") {
-                            available = ((h >= 6.0 && end <= 10.0) || (h >= 22.0 && end <= 30.0)) && hoursToTime(h).day === "Samstag";
+                            available = h >= 6.0 && end <= 30.0 && hoursToTime(h).day === "Samstag";
                           } else if (slot1Day === "Sonntag") {
                             available = h >= 30.0 && end <= 44.0 && hoursToTime(h).day === "Sonntag";
                           }
@@ -1952,7 +1952,7 @@
                           if (slot2Day === "Freitag") {
                             available = h >= -4.0 && end <= 6.0 && hoursToTime(h).day === "Freitag";
                           } else if (slot2Day === "Samstag") {
-                            available = ((h >= 6.0 && end <= 10.0) || (h >= 22.0 && end <= 30.0)) && hoursToTime(h).day === "Samstag";
+                            available = h >= 6.0 && end <= 30.0 && hoursToTime(h).day === "Samstag";
                           } else if (slot2Day === "Sonntag") {
                             available = h >= 30.0 && end <= 44.0 && hoursToTime(h).day === "Sonntag";
                           }
