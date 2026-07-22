@@ -1664,7 +1664,9 @@
               if (slot.isGap) {
                 return React.createElement("div", {
                   key: `gap_${dayName}_${idx}_${slot.startHours}`,
-                  className: "slot-row empty-slot"
+                  className: "slot-row empty-slot interactive",
+                  onClick: () => handleEmptySlotClick(slot),
+                  title: "Klicken, um diesen Slot zu buchen"
                 },
                   React.createElement("div", { className: "slot-time-large" }, displayHourLarge),
                   React.createElement("div", { className: "slot-content" },
@@ -1679,9 +1681,12 @@
                 );
               }
 
+              const isLocked = slot.isLocked;
+
               return React.createElement("div", {
                 key: idx,
-                className: "slot-row"
+                className: `slot-row ${isLocked ? 'locked' : 'interactive'}`.trim(),
+                onClick: () => handleSlotClick(slot)
               },
                 // Time Label (Left side)
                 React.createElement("div", { className: "slot-time-large" }, displayHourLarge),
@@ -1701,7 +1706,39 @@
         );
       };
 
-      return React.createElement("div", { className: "timetable-container print-container print-continuous" },
+      return React.createElement("div", { className: `timetable-container print-container ${printMode === "perday" ? "print-per-day" : "print-continuous"}` },
+        // Top Bar Controls
+        React.createElement("div", { className: "top-bar-controls no-print" },
+          React.createElement("button", {
+            className: "btn btn-primary",
+            onClick: () => {
+              setDjName(localStorage.getItem("veenland_last_dj_name") || "");
+              setGenre("");
+              setPassword("");
+              setSlot1Active(true);
+              setSlot1Day("Freitag");
+              setSlot1Start("18:00");
+              setSlot1Duration(2.0);
+              setSlot2Active(false);
+              setOpenedSlotContext(null);
+              setDeleteConfirmStep(0);
+              setDeleteConfirmPassword("");
+              setIsModalOpen(true);
+            }
+          }, "SLOT SICHERN"),
+          React.createElement("div", { className: "top-bar-right" },
+            React.createElement("button", {
+              className: "btn",
+              onClick: () => setPrintMode(printMode === "continuous" ? "perday" : "continuous"),
+              title: "Aufteilung für PDF/Druck: durchlaufend (zum Aneinanderkleben) oder eine Seite pro Tag"
+            }, printMode === "continuous" ? "🧾 SEITEN: DURCHLAUFEND" : "🧾 SEITEN: PRO TAG"),
+            React.createElement("span", { className: "group-arrow", "aria-hidden": "true" }, "→"),
+            React.createElement("button", {
+              className: "btn",
+              onClick: handlePrint
+            }, "🖨 DRUCKEN")
+          )
+        ),
         // Timetable Main Wrapper Card
         React.createElement("div", { className: "timetable-wrapper" },
           // Header Bar
@@ -1755,6 +1792,353 @@
             ),
             React.createElement("div", { className: "footer-logo" },
               React.createElement("div", { className: "footer-logo-text" }, "VEENLAND")
+            )
+          )
+        ),
+
+        // DJ Registration Modal
+        isModalOpen && React.createElement("div", { className: "modal-overlay no-print" },
+          React.createElement("div", { className: "modal-content" },
+            deleteConfirmStep === 0 ? (
+              // Normal Input Form
+              React.createElement("form", { onSubmit: handleSaveSlot },
+                React.createElement("h3", { className: "modal-title" }, "DJs an den Decks"),
+                React.createElement("div", { className: "form-group" },
+                  React.createElement("label", { className: "form-label" }, "DJ / ACT NAME"),
+                  React.createElement("input", {
+                    type: "text",
+                    className: "form-input",
+                    required: true,
+                    placeholder: "z.B. DJ Fischstäbchen",
+                    value: djName,
+                    onChange: (e) => handleDjNameChange(e.target.value)
+                  })
+                ),
+                React.createElement("div", { className: "form-group" },
+                  React.createElement("label", { className: "form-label" }, "GENRE / MUSIKRICHTUNG"),
+                  React.createElement("input", {
+                    type: "text",
+                    className: "form-input",
+                    required: true,
+                    placeholder: "z.B. Schlager, Heavy Metal, Free Jazz",
+                    value: genre,
+                    onChange: (e) => setGenre(e.target.value)
+                  }),
+                  React.createElement("p", { className: "form-hint" }, "Mehrere Genres bitte mit Komma trennen (z. B. Techno, House, Disco).")
+                ),
+                React.createElement("div", { className: "form-group" },
+                  React.createElement("label", { className: "form-label" }, "PASSWORT (OPTIONAL)"),
+                  React.createElement("input", {
+                    type: "password",
+                    className: "form-input",
+                    placeholder: "Passwort zum Schutz deines Slots",
+                    value: password,
+                    onChange: (e) => setPassword(e.target.value)
+                  }),
+                  !password.trim() && React.createElement("p", { className: "warning-text" }, "⚠ Ohne Passwort kann jeder deinen Slot löschen!")
+                ),
+
+                React.createElement("div", { style: { marginTop: "25px", marginBottom: "15px" } },
+                  React.createElement("span", { className: "form-label", style: { fontSize: "11px", fontWeight: "bold" } }, "SLOTS AUSWÄHLEN (MAXIMAL 2 SLOTS)")
+                ),
+
+                // SLOT 1 Option Card
+                React.createElement("div", { className: "slot-option-container" },
+                  React.createElement("div", {
+                    className: "checkbox-row",
+                    onClick: () => setSlot1Active(!slot1Active)
+                  },
+                    React.createElement("input", {
+                      type: "checkbox",
+                      checked: slot1Active,
+                      onChange: () => { }
+                    }),
+                    React.createElement("span", { className: "checkbox-label" }, "Slot 1 registrieren")
+                  ),
+                  slot1Active && React.createElement("div", { className: "slot-fields-grid" },
+                    React.createElement("div", null,
+                      React.createElement("label", { className: "form-label" }, "TAG"),
+                      React.createElement("select", {
+                        className: "form-select",
+                        value: slot1Day,
+                        onChange: (e) => setSlot1Day(e.target.value)
+                      },
+                        React.createElement("option", { value: "Freitag" }, "Freitag"),
+                        React.createElement("option", { value: "Samstag" }, "Samstag"),
+                        React.createElement("option", { value: "Sonntag" }, "Sonntag")
+                      )
+                    ),
+                    React.createElement("div", null,
+                      React.createElement("label", { className: "form-label" }, "STARTZEIT"),
+                      React.createElement("select", {
+                        className: "form-select",
+                        value: slot1Start,
+                        onChange: (e) => setSlot1Start(e.target.value)
+                      },
+                        HOURS_24.map(time => {
+                          const h = timeToHours(slot1Day, time);
+                          const end = h + Number(slot1Duration);
+                          let available = false;
+                          if (slot1Day === "Freitag") {
+                            available = h >= -4.0 && end <= 6.0 && hoursToTime(h).day === "Freitag";
+                          } else if (slot1Day === "Samstag") {
+                            available = h >= 6.0 && end <= 30.0 && hoursToTime(h).day === "Samstag";
+                          } else if (slot1Day === "Sonntag") {
+                            available = h >= 30.0 && end <= 44.0 && hoursToTime(h).day === "Sonntag";
+                          }
+                          const isOccupied = available && allMergedSlots.some(s => {
+                            if (s.djName && s.djName.toUpperCase() === djName.trim().toUpperCase()) return false;
+                            return h < s.endHours && end > s.startHours;
+                          });
+                          const disabled = !available || isOccupied;
+                          return React.createElement("option", { key: time, value: time, disabled: disabled, style: disabled ? { color: '#666' } : {} },
+                            !available ? `${time} (—)` : (isOccupied ? `${time} (belegt)` : time)
+                          );
+                        })
+                      )
+                    ),
+                    React.createElement("div", null,
+                      React.createElement("label", { className: "form-label" }, "DAUER"),
+                      React.createElement("select", {
+                        className: "form-select",
+                        value: slot1Duration,
+                        onChange: (e) => setSlot1Duration(Number(e.target.value))
+                      },
+                        React.createElement("option", { value: "1" }, "1 Std"),
+                        React.createElement("option", { value: "2" }, "2 Std"),
+                        React.createElement("option", { value: "3" }, "3 Std")
+                      )
+                    )
+                  )
+                ),
+
+                // SLOT 2 Option Card
+                React.createElement("div", { className: "slot-option-container" },
+                  React.createElement("div", {
+                    className: "checkbox-row",
+                    onClick: () => setSlot2Active(!slot2Active)
+                  },
+                    React.createElement("input", {
+                      type: "checkbox",
+                      checked: slot2Active,
+                      onChange: () => { }
+                    }),
+                    React.createElement("span", { className: "checkbox-label" }, "Slot 2 registrieren")
+                  ),
+                  slot2Active && React.createElement("div", { className: "slot-fields-grid" },
+                    React.createElement("div", null,
+                      React.createElement("label", { className: "form-label" }, "TAG"),
+                      React.createElement("select", {
+                        className: "form-select",
+                        value: slot2Day,
+                        onChange: (e) => setSlot2Day(e.target.value)
+                      },
+                        React.createElement("option", { value: "Freitag" }, "Freitag"),
+                        React.createElement("option", { value: "Samstag" }, "Samstag"),
+                        React.createElement("option", { value: "Sonntag" }, "Sonntag")
+                      )
+                    ),
+                    React.createElement("div", null,
+                      React.createElement("label", { className: "form-label" }, "STARTZEIT"),
+                      React.createElement("select", {
+                        className: "form-select",
+                        value: slot2Start,
+                        onChange: (e) => setSlot2Start(e.target.value)
+                      },
+                        HOURS_24.map(time => {
+                          const h = timeToHours(slot2Day, time);
+                          const end = h + Number(slot2Duration);
+                          let available = false;
+                          if (slot2Day === "Freitag") {
+                            available = h >= -4.0 && end <= 6.0 && hoursToTime(h).day === "Freitag";
+                          } else if (slot2Day === "Samstag") {
+                            available = h >= 6.0 && end <= 30.0 && hoursToTime(h).day === "Samstag";
+                          } else if (slot2Day === "Sonntag") {
+                            available = h >= 30.0 && end <= 44.0 && hoursToTime(h).day === "Sonntag";
+                          }
+                          const isOccupied = available && allMergedSlots.some(s => {
+                            if (s.djName && s.djName.toUpperCase() === djName.trim().toUpperCase()) return false;
+                            return h < s.endHours && end > s.startHours;
+                          });
+                          const disabled = !available || isOccupied;
+                          return React.createElement("option", { key: time, value: time, disabled: disabled, style: disabled ? { color: '#666' } : {} },
+                            !available ? `${time} (—)` : (isOccupied ? `${time} (belegt)` : time)
+                          );
+                        })
+                      )
+                    ),
+                    React.createElement("div", null,
+                      React.createElement("label", { className: "form-label" }, "DAUER"),
+                      React.createElement("select", {
+                        className: "form-select",
+                        value: slot2Duration,
+                        onChange: (e) => setSlot2Duration(Number(e.target.value))
+                      },
+                        React.createElement("option", { value: "1" }, "1 Std"),
+                        React.createElement("option", { value: "2" }, "2 Std"),
+                        React.createElement("option", { value: "3" }, "3 Std")
+                      )
+                    )
+                  )
+                ),
+
+                React.createElement("div", { className: "modal-actions" },
+                  (openedSlotContext && !openedSlotContext.isGap) && React.createElement("button", {
+                    type: "button",
+                    className: "btn btn-delete",
+                    onClick: () => {
+                      setDeleteConfirmStep(1);
+                      setDeleteConfirmPassword("");
+                    }
+                  }, "SLOT FREIGEBEN"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "btn",
+                    onClick: () => setIsModalOpen(false)
+                  }, "ABBRECHEN"),
+                  React.createElement("button", {
+                    type: "submit",
+                    className: "btn btn-primary"
+                  }, "SPEICHERN")
+                ),
+                React.createElement("p", { className: "warning-text" }, "* Jeder DJ kann maximal 2 Slots registrieren. Slots können 1 bis 3 Stunden dauern.")
+              )
+            ) : (
+              // Custom Delete Confirmation Screen inside modal
+              React.createElement("div", null,
+                React.createElement("h3", { className: "modal-title", style: { color: "#f44336" } }, "Slot freigeben"),
+                (() => {
+                  const slotPassword = openedSlotContext.password || "";
+                  const hasPassword = slotPassword.length > 0;
+
+                  if (!hasPassword) {
+                    // No password was set – allow deletion freely
+                    return React.createElement(React.Fragment, null,
+                      React.createElement("p", { style: { fontSize: "14px", color: "var(--white)", marginBottom: "20px", lineHeight: "1.6" } },
+                        "Dieser Slot hat kein Passwort. Möchtest du ihn wirklich freigeben?"
+                      ),
+                      React.createElement("div", { className: "modal-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "btn",
+                          onClick: () => setDeleteConfirmStep(0)
+                        }, "ZURÜCK"),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "btn btn-delete",
+                          onClick: handleDeleteSlot
+                        }, "JA, FREIGEBEN")
+                      )
+                    );
+                  } else {
+                    // Password protected – require password to delete
+                    return React.createElement(React.Fragment, null,
+                      React.createElement("p", { style: { fontSize: "14px", color: "var(--white)", marginBottom: "20px", lineHeight: "1.6" } },
+                        `Dieser Slot von '${openedSlotContext.djName}' ist passwortgeschützt. Gib das Passwort ein, um ihn freizugeben:`
+                      ),
+                      React.createElement("div", { className: "form-group" },
+                        React.createElement("label", { className: "form-label" }, "PASSWORT"),
+                        React.createElement("input", {
+                          type: "password",
+                          className: "form-input",
+                          placeholder: "Passwort eingeben",
+                          value: deleteConfirmPassword,
+                          onChange: (e) => setDeleteConfirmPassword(e.target.value)
+                        })
+                      ),
+                      React.createElement("div", { className: "modal-actions" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "btn",
+                          onClick: () => setDeleteConfirmStep(0)
+                        }, "ZURÜCK"),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "btn btn-delete",
+                          disabled: deleteConfirmPassword.trim() !== slotPassword,
+                          onClick: handleDeleteSlot
+                        }, "JA, FREIGEBEN")
+                      )
+                    );
+                  }
+                })()
+              )
+            )
+          )
+        ),
+
+        // Database Configuration Modal (Supabase Setup)
+        isDbModalOpen && React.createElement("div", { className: "modal-overlay no-print" },
+          React.createElement("div", { className: "modal-content", style: { maxWidth: "600px" } },
+            React.createElement("h3", { className: "modal-title" }, "Online-Datenbank verbinden"),
+            React.createElement("p", { style: { fontSize: "13px", color: "var(--muted)", marginBottom: "15px", lineHeight: "1.6" } },
+              "Damit alle DJs ihre Slots auf ihren eigenen Handys sehen und synchronisieren können, kannst du hier ein kostenloses Supabase-Projekt verbinden. Trage die Daten hier ein oder füge sie direkt in deiner 'Veenland Timetable.html' in Zeile 563 ein."
+            ),
+            React.createElement("form", { onSubmit: handleSaveDbSettings },
+              React.createElement("div", { className: "form-group" },
+                React.createElement("label", { className: "form-label" }, "SUPABASE URL"),
+                React.createElement("input", {
+                  type: "text",
+                  className: "form-input",
+                  placeholder: "https://xxxxxx.supabase.co",
+                  value: dbUrl,
+                  onChange: (e) => setDbUrl(e.target.value)
+                })
+              ),
+              React.createElement("div", { className: "form-group" },
+                React.createElement("label", { className: "form-label" }, "SUPABASE PUBLIC ANON KEY"),
+                React.createElement("input", {
+                  type: "text",
+                  className: "form-input",
+                  placeholder: "eyJhbGciOiJIUzI1NiIsIn...",
+                  value: dbKey,
+                  onChange: (e) => setDbKey(e.target.value)
+                })
+              ),
+              React.createElement("p", { className: "form-label", style: { marginTop: "15px", marginBottom: "5px" } }, "1. SQL QUERY IN SUPABASE AUSFÜHREN:"),
+              React.createElement("div", { className: "sql-code-box" },
+                `CREATE TABLE slots (
+  slot_id TEXT PRIMARY KEY,
+  dj_name TEXT NOT NULL,
+  genre TEXT NOT NULL,
+  day TEXT NOT NULL,
+  start_time TEXT NOT NULL,
+  duration NUMERIC NOT NULL,
+  start_hours NUMERIC NOT NULL,
+  end_hours NUMERIC NOT NULL,
+  password TEXT DEFAULT '',
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- RLS aktivieren für öffentlichen Schreibzugriff
+ALTER TABLE slots ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public Read" ON slots FOR SELECT USING (true);
+CREATE POLICY "Public Insert" ON slots FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public Delete" ON slots FOR DELETE USING (true);`
+              ),
+              React.createElement("div", { className: "modal-actions" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "btn",
+                  onClick: () => {
+                    setDbUrl("");
+                    setDbKey("");
+                    localStorage.removeItem("veenland_db_url");
+                    localStorage.removeItem("veenland_db_key");
+                    setIsDbModalOpen(false);
+                    fetchSlots();
+                  }
+                }, "Trennen / Demo-Modus"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "btn",
+                  onClick: () => setIsDbModalOpen(false)
+                }, "ABBRECHEN"),
+                React.createElement("button", {
+                  type: "submit",
+                  className: "btn btn-primary"
+                }, "VERBINDEN")
+              )
             )
           )
         )
