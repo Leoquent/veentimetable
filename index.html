@@ -1832,26 +1832,9 @@
       };
 
       return React.createElement("div", { className: `timetable-container print-container ${printMode === "perday" ? "print-per-day" : "print-continuous"} ${printTheme === "light" ? "print-theme-light" : "print-theme-dark"}` },
-        // Top Bar Controls (nur am Bildschirm sichtbar)
+        // Top Bar Controls (nur am Bildschirm sichtbar für Besucher)
         React.createElement("div", { className: "top-bar-controls no-print" },
-          React.createElement("button", {
-            className: "btn btn-primary",
-            onClick: () => {
-              setDjName(localStorage.getItem("veenland_last_dj_name") || "");
-              setGenre("");
-              setPassword("");
-              setSlot1Active(true);
-              setSlot1Day("Freitag");
-              setSlot1Start("14:00");
-              setSlot1Duration(2.0);
-              setSlot2Active(false);
-              setOpenedSlotContext(null);
-              setDeleteConfirmStep(0);
-              setDeleteConfirmPassword("");
-              setIsModalOpen(true);
-            }
-          }, "SLOT SICHERN"),
-          React.createElement("div", { className: "top-bar-right" },
+          React.createElement("div", { className: "top-bar-right", style: { marginLeft: "auto" } },
             React.createElement("button", {
               className: "btn",
               onClick: () => setPrintTheme(printTheme === "light" ? "dark" : "light"),
