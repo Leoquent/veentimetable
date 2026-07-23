@@ -957,6 +957,11 @@
        dunkle Hintergrund mitgedruckt wird.
        Aufteilung über .print-continuous / .print-per-day.
        ==================================================================== */
+    /* Mini-Footer auf gedruckten Tages-Seiten (auf dem Bildschirm ausgeblendet) */
+    .print-day-footer {
+      display: none;
+    }
+
     @media print {
 
       /* Seitenrand = 0, damit der dunkle Hintergrund randlos die ganze Seite
@@ -989,81 +994,109 @@
         background: #2a2622 !important;
         width: 100% !important;
         max-width: 100% !important;
-        /* Rundum-Rand in Hintergrundfarbe (ersetzt den weißen Seitenrand).
-           Seitliches Padding gilt auf JEDER Seite, oben/unten am Anfang/Ende
-           des Flusses; Folgeseiten erhalten ihren Abstand über die Tages-
-           Container weiter unten. */
-        padding: 4mm 6mm !important;
+        /* Rundum-Rand in Hintergrundfarbe */
+        padding: 6mm 8mm !important;
         margin: 0 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
 
       .timetable-header {
-        margin-bottom: 8px !important;
-        padding-bottom: 4px !important;
+        margin-bottom: 12px !important;
+        padding-bottom: 6px !important;
       }
 
-      /* Header möglichst wie auf der Website – große VEENLAND-Type + Fee.
-         Spaltenbreiten so gewählt, dass „LAND" bei A4-Breite (~688px) sicher
-         in die 1fr-Spalte passt. */
+      /* Header möglichst wie auf der Website – große VEENLAND-Type + Fee. */
       .hero-section {
         display: grid !important;
-        grid-template-columns: min-content auto 130px !important;
-        gap: 16px !important;
+        grid-template-columns: min-content auto 140px !important;
+        gap: 18px !important;
         align-items: end !important;
-        padding-bottom: 20px !important;
+        padding-bottom: 22px !important;
         page-break-inside: avoid;
         break-inside: avoid;
       }
-      .hero-title { font-size: 130px !important; line-height: 0.82 !important; letter-spacing: -0.01em !important; }
-      .meta-dates { font-size: 24px !important; }
-      .meta-subtitle, .meta-info { font-size: 10px !important; }
+      .hero-title { font-size: 138px !important; line-height: 0.82 !important; letter-spacing: -0.01em !important; }
+      .meta-dates { font-size: 25px !important; }
+      .meta-subtitle, .meta-info { font-size: 10.5px !important; }
 
       /* Fee statisch (Funken im Druck aus), groß wie auf der Website */
       .hero-fairy img {
-        height: 150px !important;
+        height: 158px !important;
         top: 0 !important;
         opacity: 1 !important;
       }
 
-      /* Slots im Print komprimieren, damit Samstag (bis zu 12 Slots) komplett auf 1 A4-Seite passt! */
+      /* Slots im Print komprimieren & ausgewogen dimensionieren, damit Samstag (10 Slots) auf 1 A4-Seite passt */
       .slot-row {
-        grid-template-columns: 130px 1fr !important;
-        gap: 18px !important;
-        padding: 9px 0 !important;
+        grid-template-columns: 140px 1fr !important;
+        gap: 20px !important;
+        padding: 12px 0 !important;
         page-break-inside: avoid;
         break-inside: avoid;
       }
-      .slot-time-large { font-size: 56px !important; }
-      .slot-title { font-size: 26px !important; }
-      .slot-genre { font-size: 12px !important; }
+      .slot-time-large { font-size: 60px !important; }
+      .slot-title { font-size: 28px !important; }
+      .slot-genre { font-size: 12.5px !important; }
       .slot-row.empty-slot { opacity: 1 !important; }
-      .slot-title.empty-title { min-height: 28px !important; }
-      .day-name { font-size: 28px !important; }
+      .slot-title.empty-title { min-height: 32px !important; }
+      .day-name { font-size: 30px !important; }
 
       .day-header {
-        margin-top: 14px !important;
-        margin-bottom: 8px !important;
-        padding-bottom: 6px !important;
+        margin-top: 16px !important;
+        margin-bottom: 10px !important;
+        padding-bottom: 8px !important;
         page-break-inside: avoid; break-inside: avoid;
         page-break-after: avoid; break-after: avoid;
       }
 
       /* MODUS „Pro Tag": jeder Tag startet auf einer neuen Seite.
-         Da der @page-Rand 0 ist, sorgen padding-top/bottom hier für den
-         dunklen Rand oben/unten auf jeder Folgeseite (reduziert auf 5mm, damit oben kein riesiger Abstand entsteht). */
+         Flex-Verteilung (min-height: 272mm) füllt die A4-Seite von oben nach unten aus. */
       .print-per-day .print-day-container {
         page-break-before: always;
         break-before: page;
-        padding-top: 5mm !important;
-        padding-bottom: 5mm !important;
+        padding-top: 6mm !important;
+        padding-bottom: 6mm !important;
+        min-height: 272mm !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
       }
-      /* Freitag (der erste Container nach hero) darf NICHT auf eine neue Seite umbrechen! */
+
+      /* Freitag (der erste Container nach hero) startet auf Seite 1 unter dem Hero */
       .print-per-day .hero-section + .print-day-container {
         page-break-before: avoid !important;
         break-before: avoid !important;
-        padding-top: 0 !important; /* Wrapper-Padding deckt die erste Seite oben ab */
+        padding-top: 0 !important;
+        min-height: auto !important;
+      }
+
+      /* Mini-Footer am Seitenende jeder gedruckten Seite */
+      .print-day-footer {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+        padding-top: 10px !important;
+        margin-top: 20px !important;
+        width: 100% !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .print-footer-quote {
+        font-family: var(--font-mono) !important;
+        font-size: 10px !important;
+        color: var(--muted) !important;
+        font-style: italic !important;
+        letter-spacing: 0.02em !important;
+      }
+      .print-footer-brand {
+        font-family: var(--font-anton) !important;
+        font-size: 16px !important;
+        color: var(--accent) !important;
+        letter-spacing: 0.08em !important;
+        text-transform: uppercase !important;
       }
 
       /* MODUS „Durchlaufend": kein erzwungener Umbruch — zum Aneinanderkleben */
@@ -1665,65 +1698,72 @@
       // Render Day Layout List
       const renderDayTimeline = (dayName, timeline) => {
         return React.createElement("div", { key: dayName, className: "print-day-container" },
-          // Day Header
-          React.createElement("div", { className: "day-header" },
-            React.createElement("div", { className: "day-name" }, dayName.toUpperCase()),
-            React.createElement("div", { className: "day-date" }, DATES[dayName])
-          ),
+          React.createElement("div", { className: "print-day-content" },
+            // Day Header
+            React.createElement("div", { className: "day-header" },
+              React.createElement("div", { className: "day-name" }, dayName.toUpperCase()),
+              React.createElement("div", { className: "day-date" }, DATES[dayName])
+            ),
 
-          timeline.length === 0 ? (
-            React.createElement("div", {
-              style: {
-                padding: "20px 0",
-                fontFamily: "var(--font-mono)",
-                fontSize: "12px",
-                color: "var(--muted)",
-                opacity: 0.5,
-                fontStyle: "italic"
-              }
-            }, "Keine Programme für diesen Zeitraum...")
-          ) : (
-            timeline.map((slot, idx) => {
-              const startDetails = hoursToTime(slot.startHours);
-              const endDetails = hoursToTime(slot.endHours);
-              const displayHourLarge = startDetails.timeStr.split(":")[0];
+            timeline.length === 0 ? (
+              React.createElement("div", {
+                style: {
+                  padding: "20px 0",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "12px",
+                  color: "var(--muted)",
+                  opacity: 0.5,
+                  fontStyle: "italic"
+                }
+              }, "Keine Programme für diesen Zeitraum...")
+            ) : (
+              timeline.map((slot, idx) => {
+                const startDetails = hoursToTime(slot.startHours);
+                const endDetails = hoursToTime(slot.endHours);
+                const displayHourLarge = startDetails.timeStr.split(":")[0];
 
-              if (slot.isGap) {
+                if (slot.isGap) {
+                  return React.createElement("div", {
+                    key: `gap_${dayName}_${idx}_${slot.startHours}`,
+                    className: "slot-row empty-slot"
+                  },
+                    React.createElement("div", { className: "slot-time-large" }, displayHourLarge),
+                    React.createElement("div", { className: "slot-content" },
+                      React.createElement("div", { className: "slot-title-row" },
+                        React.createElement("div", { className: "slot-title empty-title" }, ""),
+                        React.createElement("div", { className: "slot-time-range" },
+                          `${startDetails.timeStr} – ${endDetails.timeStr}`
+                        )
+                      ),
+                      React.createElement("div", { className: "slot-genre" }, "")
+                    )
+                  );
+                }
+
                 return React.createElement("div", {
-                  key: `gap_${dayName}_${idx}_${slot.startHours}`,
-                  className: "slot-row empty-slot"
+                  key: idx,
+                  className: "slot-row"
                 },
+                  // Time Label (Left side)
                   React.createElement("div", { className: "slot-time-large" }, displayHourLarge),
+                  // Slot Info Details (Right side)
                   React.createElement("div", { className: "slot-content" },
                     React.createElement("div", { className: "slot-title-row" },
-                      React.createElement("div", { className: "slot-title empty-title" }, ""),
+                      React.createElement("div", { className: "slot-title" }, slot.djName),
                       React.createElement("div", { className: "slot-time-range" },
                         `${startDetails.timeStr} – ${endDetails.timeStr}`
                       )
                     ),
-                    React.createElement("div", { className: "slot-genre" }, "")
+                    React.createElement("div", { className: "slot-genre" }, formatGenre(slot.genre))
                   )
                 );
-              }
-
-              return React.createElement("div", {
-                key: idx,
-                className: "slot-row"
-              },
-                // Time Label (Left side)
-                React.createElement("div", { className: "slot-time-large" }, displayHourLarge),
-                // Slot Info Details (Right side)
-                React.createElement("div", { className: "slot-content" },
-                  React.createElement("div", { className: "slot-title-row" },
-                    React.createElement("div", { className: "slot-title" }, slot.djName),
-                    React.createElement("div", { className: "slot-time-range" },
-                      `${startDetails.timeStr} – ${endDetails.timeStr}`
-                    )
-                  ),
-                  React.createElement("div", { className: "slot-genre" }, formatGenre(slot.genre))
-                )
-              );
-            })
+              })
+            )
+          ),
+          // Mini-Footer für jede gedruckte A4-Seite
+          React.createElement("div", { className: "print-day-footer" },
+            React.createElement("div", { className: "print-footer-quote" }, "„Man muss noch Chaos in sich haben, um einen tanzenden Stern zu gebären.“ — Nietzsche"),
+            React.createElement("div", { className: "print-footer-brand" }, "VEENLAND 2026")
           )
         );
       };
