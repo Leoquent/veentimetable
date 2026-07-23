@@ -1104,6 +1104,56 @@
         page-break-before: auto;
         break-before: auto;
       }
+
+      /* PAPIERFREUNDLICHER DRUCK-LOOK (HELL) — 0% dunkle Tinte, keine Streifen auf Papier */
+      .print-theme-light body,
+      body.print-theme-light {
+        background: #ffffff !important;
+        color: #1b1917 !important;
+      }
+
+      .print-theme-light .timetable-wrapper {
+        background: #ffffff !important;
+        border-color: #e0552f !important;
+      }
+
+      .print-theme-light .hero-title,
+      .print-theme-light .day-name,
+      .print-theme-light .slot-time-large,
+      .print-theme-light .meta-dates,
+      .print-theme-light .print-footer-brand {
+        color: #e0552f !important;
+      }
+
+      .print-theme-light .slot-title {
+        color: #1b1917 !important;
+      }
+
+      .print-theme-light .slot-time-range,
+      .print-theme-light .slot-genre,
+      .print-theme-light .meta-subtitle,
+      .print-theme-light .meta-info,
+      .print-theme-light .day-date,
+      .print-theme-light .print-footer-quote,
+      .print-theme-light .timetable-header {
+        color: #555555 !important;
+      }
+
+      .print-theme-light .slot-row {
+        border-top-color: rgba(0, 0, 0, 0.12) !important;
+      }
+
+      .print-theme-light .day-header {
+        border-bottom-color: #e0552f !important;
+      }
+
+      .print-theme-light .print-day-footer {
+        border-top-color: rgba(0, 0, 0, 0.15) !important;
+      }
+
+      .print-theme-light .meta-divider {
+        background: rgba(0, 0, 0, 0.15) !important;
+      }
     }
   </style>
 </head>
@@ -1284,6 +1334,8 @@
 
       // Druck-/PDF-Aufteilung: 'continuous' (durchlaufend, zum Kleben) | 'perday' (eine Seite pro Tag)
       const [printMode, setPrintMode] = React.useState("continuous");
+      // Druck-Look: 'light' (papierfreundlich weiß, 0% dunkler Farbverbrauch, 0 Streifen) | 'dark' (original dunkel)
+      const [printTheme, setPrintTheme] = React.useState("light");
 
       const isLiveDb = React.useMemo(() => !!(dbUrl && dbKey), [dbUrl, dbKey]);
 
@@ -1765,7 +1817,45 @@
         );
       };
 
-      return React.createElement("div", { className: "timetable-container print-container print-continuous" },
+      return React.createElement("div", { className: `timetable-container print-container ${printMode === "perday" ? "print-per-day" : "print-continuous"} ${printTheme === "light" ? "print-theme-light" : "print-theme-dark"}` },
+        // Top Bar Controls (nur am Bildschirm sichtbar)
+        React.createElement("div", { className: "top-bar-controls no-print" },
+          React.createElement("button", {
+            className: "btn btn-primary",
+            onClick: () => {
+              setDjName(localStorage.getItem("veenland_last_dj_name") || "");
+              setGenre("");
+              setPassword("");
+              setSlot1Active(true);
+              setSlot1Day("Freitag");
+              setSlot1Start("14:00");
+              setSlot1Duration(2.0);
+              setSlot2Active(false);
+              setOpenedSlotContext(null);
+              setDeleteConfirmStep(0);
+              setDeleteConfirmPassword("");
+              setIsModalOpen(true);
+            }
+          }, "SLOT SICHERN"),
+          React.createElement("div", { className: "top-bar-right" },
+            React.createElement("button", {
+              className: "btn",
+              onClick: () => setPrintTheme(printTheme === "light" ? "dark" : "light"),
+              title: "Umschalten zwischen papierfreundlichem hellen Druck (spart 100% dunkle Tinte) und dunklem Original-Design"
+            }, printTheme === "light" ? "🎨 DRUCK: PAPIERFREUNDLICH (HELL)" : "🎨 DRUCK: DUNKEL (ORIGINAL)"),
+            React.createElement("button", {
+              className: "btn",
+              onClick: () => setPrintMode(printMode === "continuous" ? "perday" : "continuous"),
+              title: "Aufteilung für PDF/Druck: durchlaufend (zum Aneinanderkleben) oder eine Seite pro Tag"
+            }, printMode === "continuous" ? "🧾 SEITEN: DURCHLAUFEND" : "🧾 SEITEN: PRO TAG"),
+            React.createElement("span", { className: "group-arrow", "aria-hidden": "true" }, "→"),
+            React.createElement("button", {
+              className: "btn",
+              onClick: handlePrint
+            }, "🖨 DRUCKEN")
+          )
+        ),
+
         // Timetable Main Wrapper Card
         React.createElement("div", { className: "timetable-wrapper" },
           // Header Bar
