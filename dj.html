@@ -1105,16 +1105,23 @@
         break-before: auto;
       }
 
-      /* PAPIERFREUNDLICHER DRUCK-LOOK (HELL) — 0% dunkle Tinte, keine Streifen auf Papier */
-      .print-theme-light body,
-      body.print-theme-light {
+      /* PAPIERFREUNDLICHER DRUCK-LOOK (HELL) — 0% dunkle Tinte, 100% weiße Ränder & Seitenränder */
+      html.print-theme-light,
+      body.print-theme-light,
+      .print-theme-light #root,
+      .print-theme-light.timetable-container,
+      .print-theme-light .timetable-wrapper,
+      .print-theme-light .print-day-container {
         background: #ffffff !important;
+        background-color: #ffffff !important;
         color: #1b1917 !important;
       }
 
-      .print-theme-light .timetable-wrapper {
-        background: #ffffff !important;
-        border-color: #e0552f !important;
+      html.print-theme-dark,
+      body.print-theme-dark,
+      .print-theme-dark .timetable-wrapper {
+        background: #2a2622 !important;
+        background-color: #2a2622 !important;
       }
 
       .print-theme-light .hero-title,
@@ -1336,6 +1343,13 @@
       const [printMode, setPrintMode] = React.useState("continuous");
       // Druck-Look: 'light' (papierfreundlich weiß, 0% dunkler Farbverbrauch, 0 Streifen) | 'dark' (original dunkel)
       const [printTheme, setPrintTheme] = React.useState("light");
+
+      React.useEffect(() => {
+        document.documentElement.classList.toggle("print-theme-light", printTheme === "light");
+        document.documentElement.classList.toggle("print-theme-dark", printTheme === "dark");
+        document.body.classList.toggle("print-theme-light", printTheme === "light");
+        document.body.classList.toggle("print-theme-dark", printTheme === "dark");
+      }, [printTheme]);
 
       const isLiveDb = React.useMemo(() => !!(dbUrl && dbKey), [dbUrl, dbKey]);
 
