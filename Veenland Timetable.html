@@ -903,25 +903,25 @@
         opacity: 1 !important;
       }
 
-      /* Slots im Print komprimieren & ausgewogen dimensionieren, damit Samstag (10 Slots) auf 1 A4-Seite passt */
+      /* Slots im Print komprimieren, damit Samstag mit allen 12 2-Stunden-Slots komplett auf 1 A4-Seite passt */
       .slot-row {
-        grid-template-columns: 140px 1fr !important;
-        gap: 20px !important;
-        padding: 12px 0 !important;
+        grid-template-columns: 135px 1fr !important;
+        gap: 18px !important;
+        padding: 10px 0 !important;
         page-break-inside: avoid;
         break-inside: avoid;
       }
-      .slot-time-large { font-size: 60px !important; }
-      .slot-title { font-size: 28px !important; }
-      .slot-genre { font-size: 12.5px !important; }
+      .slot-time-large { font-size: 56px !important; }
+      .slot-title { font-size: 26px !important; }
+      .slot-genre { font-size: 12px !important; }
       .slot-row.empty-slot { opacity: 1 !important; }
-      .slot-title.empty-title { min-height: 32px !important; }
-      .day-name { font-size: 30px !important; }
+      .slot-title.empty-title { min-height: 28px !important; }
+      .day-name { font-size: 28px !important; }
 
       .day-header {
-        margin-top: 16px !important;
-        margin-bottom: 10px !important;
-        padding-bottom: 8px !important;
+        margin-top: 14px !important;
+        margin-bottom: 8px !important;
+        padding-bottom: 6px !important;
         page-break-inside: avoid; break-inside: avoid;
         page-break-after: avoid; break-after: avoid;
       }
@@ -1098,10 +1098,7 @@
       while (curr < gapEnd - 0.01) {
         const remaining = gapEnd - curr;
         let duration = 2.0;
-        // Bei freien Blöcken 3-Stunden-Slots bevorzugen (z. B. 3h, 6h, 9h), damit Samstag komprimierter dargestellt werden kann
-        if (Math.abs(remaining % 3.0) < 0.01 || Math.abs(remaining - 3.0) < 0.01) {
-          duration = 3.0;
-        } else if (remaining < 2.0 - 0.01) {
+        if (remaining < 2.0 - 0.01) {
           duration = remaining;
         }
         const end = curr + duration;
