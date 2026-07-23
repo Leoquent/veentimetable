@@ -1831,28 +1831,7 @@
         );
       };
 
-      return React.createElement("div", { className: `timetable-container print-container ${printMode === "perday" ? "print-per-day" : "print-continuous"} ${printTheme === "light" ? "print-theme-light" : "print-theme-dark"}` },
-        // Top Bar Controls (nur am Bildschirm sichtbar für Besucher)
-        React.createElement("div", { className: "top-bar-controls no-print" },
-          React.createElement("div", { className: "top-bar-right", style: { marginLeft: "auto" } },
-            React.createElement("button", {
-              className: "btn",
-              onClick: () => setPrintTheme(printTheme === "light" ? "dark" : "light"),
-              title: "Umschalten zwischen papierfreundlichem hellen Druck (spart 100% dunkle Tinte) und dunklem Original-Design"
-            }, printTheme === "light" ? "🎨 DRUCK: PAPIERFREUNDLICH (HELL)" : "🎨 DRUCK: DUNKEL (ORIGINAL)"),
-            React.createElement("button", {
-              className: "btn",
-              onClick: () => setPrintMode(printMode === "continuous" ? "perday" : "continuous"),
-              title: "Aufteilung für PDF/Druck: durchlaufend (zum Aneinanderkleben) oder eine Seite pro Tag"
-            }, printMode === "continuous" ? "🧾 SEITEN: DURCHLAUFEND" : "🧾 SEITEN: PRO TAG"),
-            React.createElement("span", { className: "group-arrow", "aria-hidden": "true" }, "→"),
-            React.createElement("button", {
-              className: "btn",
-              onClick: handlePrint
-            }, "🖨 DRUCKEN")
-          )
-        ),
-
+      return React.createElement("div", { className: "timetable-container" },
         // Timetable Main Wrapper Card
         React.createElement("div", { className: "timetable-wrapper" },
           // Header Bar
