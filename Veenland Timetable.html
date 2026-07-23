@@ -866,11 +866,7 @@
         background: #2a2622 !important;
         width: 100% !important;
         max-width: 100% !important;
-        /* Rundum-Rand in Hintergrundfarbe (ersetzt den weißen Seitenrand).
-           Seitliches Padding gilt auf JEDER Seite, oben/unten am Anfang/Ende
-           des Flusses; Folgeseiten erhalten ihren Abstand über die Tages-
-           Container weiter unten. */
-        padding: 6mm 6mm !important;
+        padding: 4mm 6mm !important;
         margin: 0 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
@@ -878,61 +874,61 @@
 
       /* Reduziere den Abstand über VEENLAND im Druck */
       .timetable-header {
-        margin-bottom: 10px !important;
-        padding-bottom: 5px !important;
+        margin-bottom: 8px !important;
+        padding-bottom: 4px !important;
       }
 
-      /* Header möglichst wie auf der Website – große VEENLAND-Type + Fee.
-         Spaltenbreiten: 1fr nimmt den Platz für VEENLAND, auto für die Fee (damit sie 
-         direkt daneben rückt wie auf der Webseite), und 200px für die rechte Spalte. */
+      /* Header möglichst wie auf der Website – große VEENLAND-Type + Fee. */
       .hero-section {
         display: grid !important;
         grid-template-columns: 1fr auto 200px !important;
-        gap: 20px !important;
+        gap: 16px !important;
         align-items: end !important;
-        padding-bottom: 25px !important;
+        padding-bottom: 20px !important;
         page-break-inside: avoid;
         break-inside: avoid;
       }
-      .hero-title { font-size: 150px !important; line-height: 0.82 !important; letter-spacing: -0.01em !important; }
-      .meta-dates { font-size: 26px !important; }
-      .meta-subtitle, .meta-info { font-size: 11px !important; }
+      .hero-title { font-size: 130px !important; line-height: 0.82 !important; letter-spacing: -0.01em !important; }
+      .meta-dates { font-size: 24px !important; }
+      .meta-subtitle, .meta-info { font-size: 10px !important; }
 
       /* Fee statisch (Funken im Druck aus), groß wie auf der Website */
       .hero-fairy img {
-        height: 170px !important;
+        height: 150px !important;
         top: 0 !important;
         opacity: 1 !important;
       }
 
-      /* Slots im Website-Raster, großzügig (füllt den Negativraum) */
+      /* Slots im Print komprimieren, damit Samstag (bis zu 12 Slots) komplett auf 1 A4-Seite passt! */
       .slot-row {
-        grid-template-columns: 160px 1fr !important;
-        gap: 22px !important;
-        padding: 18px 0 !important;
+        grid-template-columns: 130px 1fr !important;
+        gap: 18px !important;
+        padding: 9px 0 !important;
         page-break-inside: avoid;
         break-inside: avoid;
       }
-      .slot-time-large { font-size: 72px !important; }
-      .slot-title { font-size: 30px !important; }
-      .slot-genre { font-size: 13px !important; }
+      .slot-time-large { font-size: 56px !important; }
+      .slot-title { font-size: 26px !important; }
+      .slot-genre { font-size: 12px !important; }
       .slot-row.empty-slot { opacity: 1 !important; }
-      .slot-title.empty-title { min-height: 38px !important; }
-      .day-name { font-size: 32px !important; }
+      .slot-title.empty-title { min-height: 28px !important; }
+      .day-name { font-size: 28px !important; }
 
       .day-header {
+        margin-top: 14px !important;
+        margin-bottom: 8px !important;
+        padding-bottom: 6px !important;
         page-break-inside: avoid; break-inside: avoid;
         page-break-after: avoid; break-after: avoid;
       }
 
       /* MODUS „Pro Tag": jeder Tag startet auf einer neuen Seite.
-         Da der @page-Rand 0 ist, sorgen padding-top/bottom hier für den
-         dunklen Rand oben/unten auf jeder Folgeseite. */
+         Reduziertes padding-top/bottom (5mm), damit oben kein riesiger Abstand entsteht. */
       .print-per-day .print-day-container {
         page-break-before: always;
         break-before: page;
-        padding-top: 14mm !important;
-        padding-bottom: 14mm !important;
+        padding-top: 5mm !important;
+        padding-bottom: 5mm !important;
       }
       /* Freitag (der erste Container nach hero) darf NICHT auf eine neue Seite umbrechen! */
       .print-per-day .hero-section + .print-day-container {
@@ -1064,7 +1060,10 @@
       while (curr < gapEnd - 0.01) {
         const remaining = gapEnd - curr;
         let duration = 2.0;
-        if (remaining < 2.0 - 0.01) {
+        // Bei freien Blöcken 3-Stunden-Slots bevorzugen (z. B. 3h, 6h, 9h), damit Samstag komprimierter dargestellt werden kann
+        if (Math.abs(remaining % 3.0) < 0.01 || Math.abs(remaining - 3.0) < 0.01) {
+          duration = 3.0;
+        } else if (remaining < 2.0 - 0.01) {
           duration = remaining;
         }
         const end = curr + duration;
